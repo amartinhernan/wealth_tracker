@@ -1,0 +1,252 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    /* Aquí devolvemos Inter */
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #ffffff;
+    padding: 2rem 1.5rem;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #4318ff;
+    margin-bottom: 3rem;
+}
+
+.logo h2 {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.logo i {
+    font-size: 2rem;
+}
+
+.nav-links {
+    list-style: none;
+}
+
+.nav-links li {
+    margin-bottom: 0.5rem;
+}
+
+.nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-decoration: none;
+    color: #a3aed1;
+    padding: 12px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.nav-links li.active a,
+.nav-links a:hover {
+    background-color: #4318ff;
+    color: white;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 2rem 3rem;
+    overflow-y: auto;
+}
+
+header {
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: #a3aed1;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+/* KPIs */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.02);
+}
+
+.kpi-title {
+    color: #a3aed1;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.profit-up {
+    color: #05cd99;
+}
+
+.profit-down {
+    color: #ee5d50;
+}
+
+/* Charts */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.02);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.custom-select {
+    padding: 8px 12px;
+    border: 1px solid #e0e5f2;
+    border-radius: 8px;
+    outline: none;
+    font-family: inherit;
+    color: #2b3674;
+}
+
+.canvas-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Table */
+.table-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.02);
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 15px;
+    border-bottom: 2px solid #f4f7fe;
+    color: #a3aed1;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #f4f7fe;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+tr:hover {
+    background-color: #fbfbfd;
+}
+
+.badge {
+    background: #f4f7fe;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #4318ff;
+}
+
+/* Table Grouping Styles */
+.portfolio-group-header {
+    background-color: #f8f9fc !important;
+    border-top: 2px solid #e0e5f2;
+    border-bottom: 2px solid #e0e5f2;
+}
+
+.portfolio-group-header td {
+    font-weight: 700;
+    color: #4318ff;
+    padding: 12px 15px;
+    font-size: 1rem;
+}
+
+.portfolio-group-totals {
+    float: right;
+    font-size: 0.85rem;
+    color: #a3aed1;
+    font-weight: 600;
+}
+
+.asset-row td:first-child {
+    padding-left: 30px;
+    /* Sangría para que parezca que está dentro de la categoría */
+    position: relative;
+}
+
+.asset-row td:first-child::before {
+    content: "↳";
+    position: absolute;
+    left: 10px;
+    color: #a3aed1;
+}
+
+/* Nuevos colores para KPIs pequeños */
+.sub-kpi {
+    font-size: 0.85rem;
+    color: #a3aed1;
+    font-weight: 600;
+    margin-top: 5px;
+}

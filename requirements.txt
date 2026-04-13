@@ -4,3 +4,6 @@ Flask-SQLAlchemy==3.1.1
 numpy<2.0.0
 python-dotenv
 requests
+yfinance
+xlrd
+openpyxl

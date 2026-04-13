@@ -194,27 +194,54 @@ function renderDonut() {
 function getMonthly() {
     const { dates } = DATA.history_global, p = DATA.history_portfolios;
     const tot = dates.map((_, i) => (p.CASH[i] || 0) + (p.CRYPTO[i] || 0) + (p.FUNDS[i] || 0) + (p.ETFS[i] || 0));
-    const mo = {};
-    dates.forEach((d, i) => { const k = d.slice(0, 7); if (!mo[k]) mo[k] = []; mo[k].push(tot[i]); });
-    return mo;
+    
+    const lastValByMo = {};
+    dates.forEach((d, i) => { lastValByMo[d.slice(0, 7)] = tot[i]; });
+    
+    const recorded = Object.keys(lastValByMo).sort();
+    if (recorded.length === 0) return [];
+
+    const all = [];
+    // Punto de referencia inicial (ganancia 0)
+    all.push({ m: recorded[0], v: 0 });
+
+    for (let i = 1; i < recorded.length; i++) {
+        const mP = recorded[i - 1], mC = recorded[i];
+        const vP = lastValByMo[mP], vC = lastValByMo[mC];
+        
+        const [y1, n1] = mP.split('-').map(Number);
+        const [y2, n2] = mC.split('-').map(Number);
+        const diff = (y2 * 12 + n2) - (y1 * 12 + n1);
+        
+        const avg = Math.round((vC - vP) / diff);
+        
+        let ty = y1, tm = n1;
+        for (let j = 0; j < diff; j++) {
+            tm++; if (tm > 12) { tm = 1; ty++; }
+            all.push({ m: `${ty}-${String(tm).padStart(2, '0')}`, v: avg });
+        }
+    }
+    return all;
 }
 function renderMonthly(cid = 'monthlyChart') {
-    const mo = getMonthly();
-    const months = Object.keys(mo).sort().slice(-18);
-    const lbls = months.map(m => { const [y, n] = m.split('-'); return new Date(+y, +n - 1, 1).toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }); });
-    const vals = months.map((m, i) => {
-        const curr = mo[m][mo[m].length - 1];
-        if (i === 0) return 0;
-        const prev = mo[months[i - 1]][mo[months[i - 1]].length - 1];
-        return Math.round(curr - prev);
-    }).slice(1);
+    const all = getMonthly();
+    if (!all.length) return;
+
+    // Quitamos el primer elemento (referencia) y cogemos los últimos 18 meses
+    const data = all.slice(1).slice(-18);
+    const lbls = data.map(d => { 
+        const [y, n] = d.m.split('-'); 
+        return new Date(+y, +n - 1, 1).toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }); 
+    });
+    const vals = data.map(d => d.v);
+    
     const ctx = document.getElementById(cid)?.getContext('2d');
     if (!ctx) return;
     if (charts[cid]) charts[cid].destroy();
     charts[cid] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: lbls.slice(1),
+            labels: lbls,
             datasets: [{
                 data: vals,
                 backgroundColor: vals.map(v => v >= 0 ? 'rgba(22,163,74,.65)' : 'rgba(220,38,38,.65)'),

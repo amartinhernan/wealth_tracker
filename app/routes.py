@@ -320,7 +320,41 @@ def import_transactions():
     categorizer = AICategorizer()
     new_count = 0
     
-    # Obtener mapeo de nombres a IDs para eficiencia
+    debug_log = []
+    def log(msg):
+        debug_log.append(f"{datetime.now().isoformat()} - {msg}")
+        print(msg)
+
+    # Optimizamos cargando las transacciones existentes en el rango de fechas de la importación
+    if data:
+        log(f"Iniciando importación de {len(data)} filas.")
+        start_date = min(t['date'] for t in data)
+        end_date = max(t['date'] for t in data)
+        # Ampliamos el margen de búsqueda para cubrir el margen de 1 día de Santander/Edenred
+        existing_txs = Transaction.query.filter(
+            Transaction.date >= db.func.date(start_date, '-2 days'),
+            Transaction.date <= db.func.date(end_date, '+2 days')
+        ).all()
+        log(f"Cargadas {len(existing_txs)} transacciones existentes para comparación.")
+        
+        # Mapa de firmas de transacciones existentes: (fecha, importe, desc, origen) -> lista de transacciones
+        existing_map = {}
+        for et in existing_txs:
+            has_time = et.date.hour != 0 or et.date.minute != 0 or et.date.second != 0
+            date_key = et.date if has_time else et.date.date()
+            sig = (date_key, et.amount, et.description, et.source)
+            if sig not in existing_map:
+                existing_map[sig] = []
+            existing_map[sig].append(et)
+            
+        # También mapeamos por raw_text (todas las columnas del banco)
+        existing_raw_map = {}
+        for et in existing_txs:
+            if et.raw_text not in existing_raw_map:
+                existing_raw_map[et.raw_text] = []
+            existing_raw_map[et.raw_text].append(et)
+
+    # Mapeos de categorías para eficiencia
     cat_map = {c.name.lower(): c.id for c in Category.query.all()}
     sub_map = {}
     for c in Category.query.all():
@@ -328,28 +362,34 @@ def import_transactions():
             sub_map[f"{c.id}_{s.name.lower()}"] = s.id
 
     for item in data:
-        # Si tenemos hora (Revolut/Edenred), comprobamos exactitud total
-        # Si no (Santander), usamos el margen de 1 día para seguridad
         has_time = item['date'].hour != 0 or item['date'].minute != 0 or item['date'].second != 0
+        date_key = item['date'] if has_time else item['date'].date()
+        sig = (date_key, item['amount'], item['description'], item['source'])
         
-        query = Transaction.query.filter(
-            Transaction.amount == item['amount'],
-            Transaction.description == item['description'],
-            Transaction.source == item['source']
-        )
+        match = None
         
-        if has_time:
-            exists = query.filter(Transaction.date == item['date']).first()
-        else:
-            exists = query.filter(
-                db.func.abs(db.func.julianday(Transaction.date) - db.func.julianday(item['date'])) <= 1
-            ).first()
+        # 1. Intentar coincidir por Firma Exacta
+        if sig in existing_map and existing_map[sig]:
+            match = existing_map[sig].pop(0)
+            log(f"SALTADA (Firma): {item['date']} - {item['amount']} - {item['description'][:30]}...")
+        
+        # 2. Intentar coincidir por Raw Text (IGUALDAD ESTRICTA DE TODAS LAS COLUMNAS)
+        if not match and item['raw_text'] in existing_raw_map and existing_raw_map[item['raw_text']]:
+            match = existing_raw_map[item['raw_text']].pop(0)
+            log(f"SALTADA (Raw): {item['date']} - {item['amount']} - {item['description'][:30]}...")
 
-        if not exists:
-            # Comprobación final por raw_text por si acaso
-            exists = Transaction.query.filter_by(raw_text=item['raw_text']).first()
-        
-        if not exists:
+        # 3. Margen de 1 día para bancos sin hora
+        if not match and not has_time:
+            from datetime import timedelta
+            for delta in [-1, 1]:
+                alt_date = date_key + timedelta(days=delta)
+                alt_sig = (alt_date, item['amount'], item['description'], item['source'])
+                if alt_sig in existing_map and existing_map[alt_sig]:
+                    match = existing_map[alt_sig].pop(0)
+                    log(f"SALTADA (Margen 1d): {item['date']} -> {alt_date} - {item['amount']}...")
+                    break
+
+        if not match:
             # IA Categorization
             cat_name, sub_name = categorizer.categorize(item['description'], item['amount'])
             
@@ -368,8 +408,13 @@ def import_transactions():
             )
             db.session.add(t)
             new_count += 1
+            log(f"NUEVA: {item['date']} - {item['amount']} - {item['description'][:30]}...")
             
     db.session.commit()
+    
+    # Guardar log en disco para diagnóstico
+    with open("import_debug.log", "w", encoding="utf-8") as f:
+        f.write("\n".join(debug_log))
     
     # Lógica de Bizums (Post-import)
     match_bizums()

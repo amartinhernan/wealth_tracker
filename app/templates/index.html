@@ -1321,6 +1321,17 @@
                     </table>
                 </div>
             </div>
+            <div class="tbl-section" style="margin-top:24px;">
+                <div class="tbl-head">
+                    <div class="card-title">Últimos Movimientos</div>
+                    <div class="tbl-hint">Recién importados o actualizados</div>
+                </div>
+                <div class="tbl-wrap">
+                    <table id="t-recent">
+                        <tbody id="tbody-recent"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- SECCIÓN FINANZAS -->
@@ -1366,7 +1377,11 @@
                     </div>
                     <div class="card">
                         <div class="card-head">
-                            <div class="card-title">Distribución de Gastos</div>
+                            <div class="card-title">Distribución por Categoría</div>
+                            <select id="finance-donut-type" class="pill" style="font-size:11px; padding:4px 8px; background:var(--bg); border:none;" onchange="loadFinanceData()">
+                                <option value="EXP">Ver Gastos</option>
+                                <option value="INC">Ver Ingresos</option>
+                            </select>
                         </div>
                         <div style="height:250px;position:relative;display:flex;justify-content:center;">
                             <canvas id="expenseCatChart" style="max-width:250px;"></canvas>
@@ -1398,6 +1413,26 @@
                          </button>
                     </div>
                 </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+                    <div style="position:relative; flex:1; min-width:250px;">
+                        <input type="text" id="tx-search" class="pill" placeholder="Buscar por descripción..." 
+                               style="width:100%; padding-left:40px; background:var(--surface); border:1px solid var(--border-md);"
+                               oninput="debouncedRenderTransactions()">
+                        <svg style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </div>
+                    <select id="filter-type" class="pill" style="min-width:140px; background:var(--surface); border:1px solid var(--border-md);" onchange="renderTransactionsTable()">
+                        <option value="ALL">Todos los tipos</option>
+                        <option value="INC">Solo Ingresos</option>
+                        <option value="EXP">Solo Gastos</option>
+                    </select>
+                    <select id="filter-status" class="pill" style="min-width:160px; background:var(--surface); border:1px solid var(--border-md);" onchange="renderTransactionsTable()">
+                        <option value="ALL">Todos los estados</option>
+                        <option value="PENDING">Pendientes de revisión</option>
+                        <option value="REVIEWED">Ya revisados</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px; font-size:12px; color:var(--text-3); font-weight:500;" id="tx-count"></div>
 
                 <div class="tbl-section" id="transactions-container">
                     <div id="unlink-zone">
@@ -1499,11 +1534,13 @@
                     });
                 }
 
-                const [dataResp, catResp] = await Promise.all([
+                const [dataResp, catResp, txResp] = await Promise.all([
                     fetch('/api/data'),
-                    fetchCategoriesCache()
+                    fetchCategoriesCache(),
+                    fetch('/api/transactions')
                 ]);
                 DATA = await dataResp.json();
+                ALL_TRANSACTIONS = await txResp.json();
                 if (DATA.error) {
                     alert("Tu base de datos SQLite está vacía. Asegúrate de ejecutar 'python init_db.py'.");
                     return;
@@ -1527,6 +1564,7 @@
             safeRender(renderMonthly);
             safeRender(renderAlloc);
             safeRender(renderTable);
+            safeRender(renderRecent);
             
             initToggles(); initPills(); initSort();
             
@@ -1554,11 +1592,13 @@
                 const response = await fetch('/api/transactions');
                 const allTransactions = await response.json();
                 
+                const typeFilter = document.getElementById('finance-donut-type')?.value || 'EXP';
+                
                 // 1. Filtrar Movimientos y agrupar por mes
                 const filtered = allTransactions.filter(t => t.category !== 'Movimiento');
                 
-                const statsByMonth = {}; // { '2023-01': { inc: 0, exp: 0 } }
-                const expByCat = {};     // { 'Comida': 0 }
+                const statsByMonth = {}; 
+                const catData = {};     
                 
                 filtered.forEach(t => {
                     const month = t.date.substring(0, 7);
@@ -1566,11 +1606,15 @@
                     
                     if (t.amount > 0) {
                         statsByMonth[month].inc += t.amount;
+                        if (typeFilter === 'INC') {
+                            catData[t.category] = (catData[t.category] || 0) + t.amount;
+                        }
                     } else {
                         const absAmt = Math.abs(t.amount);
                         statsByMonth[month].exp += absAmt;
-                        // Gastos por categoría
-                        expByCat[t.category] = (expByCat[t.category] || 0) + absAmt;
+                        if (typeFilter === 'EXP') {
+                            catData[t.category] = (catData[t.category] || 0) + absAmt;
+                        }
                     }
                 });
 
@@ -1589,7 +1633,7 @@
                 const savingsRate = totalInc > 0 ? (netSavings / totalInc) * 100 : 0;
 
                 document.getElementById('f-avg-income').textContent = eur(avgInc);
-                document.getElementById('f-avg-expense').textContent = eur(-avgExp); // Mostrar como negativo para claridad
+                document.getElementById('f-avg-expense').textContent = eur(-avgExp); 
                 document.getElementById('f-total-savings').textContent = eur(netSavings);
                 document.getElementById('f-saving-rate').textContent = savingsRate.toFixed(1) + '%';
                 
@@ -1600,7 +1644,7 @@
                 renderFinanceChart(sortedMonths, incomes, expenses);
                 
                 // 4. Renderizar Gráfico Distribución (Donut)
-                renderExpenseCatChart(expByCat);
+                renderExpenseCatChart(catData);
 
             } catch (err) {
                 console.error("Error cargando dashboard financiero:", err);
@@ -1708,16 +1752,24 @@
             });
         }
 
+        let ALL_TRANSACTIONS = [];
+        let txSearchTimeout;
+        function debouncedRenderTransactions() {
+            clearTimeout(txSearchTimeout);
+            txSearchTimeout = setTimeout(renderTransactionsTable, 300);
+        }
+
         async function fetchTransactions() {
             try {
                 const response = await fetch('/api/transactions');
                 const transactions = await response.json();
-                renderTransactionsTable(transactions);
+                ALL_TRANSACTIONS = transactions; 
+                renderTransactionsTable();
+                renderRecent();
             } catch (error) {
                 console.error("Error cargando transacciones:", error);
             }
         }
-
         async function handleFileUpload(input) {
             if (!input.files || input.files.length === 0) return;
             
@@ -1729,9 +1781,6 @@
             formData.append('source', source);
             
             try {
-                const btn = input.nextElementSibling;
-                const originalText = "Elegir Archivo";
-                // feedback visual simple
                 document.querySelector('[onclick*="import-file"]').textContent = "Procesando...";
                 
                 const response = await fetch('/api/transactions/import', {
@@ -1760,12 +1809,24 @@
             CATEGORIES_CACHE = await resp.json();
         }
 
-        function renderTransactionsTable(data) {
+        function renderTransactionsTable() {
+            const data = ALL_TRANSACTIONS;
+            const query = document.getElementById('tx-search')?.value.toLowerCase() || '';
+            const typeFilter = document.getElementById('filter-type')?.value || 'ALL';
+            const statusFilter = document.getElementById('filter-status')?.value || 'ALL';
+
+            const filtered = data.filter(t => {
+                const matchesSearch = t.description.toLowerCase().includes(query) || (t.category && t.category.toLowerCase().includes(query));
+                const matchesType = typeFilter === 'ALL' || (typeFilter === 'INC' && t.amount > 0) || (typeFilter === 'EXP' && t.amount < 0);
+                const matchesStatus = statusFilter === 'ALL' || (statusFilter === 'PENDING' && !t.is_reviewed) || (statusFilter === 'REVIEWED' && t.is_reviewed);
+                return matchesSearch && matchesType && matchesStatus;
+            });
+
             const tbody = document.getElementById('tbody-transactions');
             const noData = document.getElementById('no-transactions');
             tbody.innerHTML = "";
             
-            if (!data || data.length === 0) {
+            if (!filtered || filtered.length === 0) {
                 noData.style.display = 'block';
                 return;
             }
@@ -1773,34 +1834,33 @@
 
             // 1. Organizar por grupos
             const transactionsById = {};
-            data.forEach(t => transactionsById[t.id] = t);
+            filtered.forEach(t => transactionsById[t.id] = t);
 
-            const roots = data.filter(t => !t.linked_transaction_id);
-            const children = data.filter(t => t.linked_transaction_id);
-
+            // Un "root" es una transacción que no tiene padre O cuyo padre NO está en la lista filtrada actual
+            const roots = filtered.filter(t => !t.linked_transaction_id || !transactionsById[t.linked_transaction_id]);
+            
+            // Agrupar hijos por su padre (incluso si el padre no está filtrado, los hijos sí pueden estarlo)
             const childrenByParent = {};
-            children.forEach(c => {
-                if (!childrenByParent[c.linked_transaction_id]) childrenByParent[c.linked_transaction_id] = [];
-                childrenByParent[c.linked_transaction_id].push(c);
+            filtered.forEach(t => {
+                if (t.linked_transaction_id) {
+                    if (!childrenByParent[t.linked_transaction_id]) childrenByParent[t.linked_transaction_id] = [];
+                    childrenByParent[t.linked_transaction_id].push(t);
+                }
             });
+
+            // Actualizar contador
+            const counter = document.getElementById('tx-count');
+            if(counter) counter.textContent = `Mostrando ${filtered.length} de ${data.length} movimientos`;
 
             // 2. Renderizar
             roots.forEach(t => {
                 const groupChildren = childrenByParent[t.id] || [];
                 if (groupChildren.length > 0) {
-                    // CALCULAR SUMA VIRTUAL
                     const totalAmount = t.amount + groupChildren.reduce((sum, c) => sum + c.amount, 0);
-                    
-                    // Renderizar Fila de Resumen (Cabecera de Grupo)
                     renderGroupHeaderRow(t, totalAmount, groupChildren.length, tbody);
-                    
-                    // Renderizar Transacción Original (Padre) como primer hijo
                     renderTransactionRow(t, tbody, 1, `group-${t.id}`);
-                    
-                    // Renderizar Hijos
-                    groupChildren.forEach(child => renderTransactionRow(child, tbody, 1, `group-${t.id}`));
+                    groupChildren.forEach(child => renderTransactionRow(child, tbody, 2, `group-${t.id}`));
                 } else {
-                    // Transacción normal sin hijos
                     renderTransactionRow(t, tbody, 0);
                 }
             });
@@ -2583,6 +2643,34 @@
         }
 
 
+
+        function renderRecent() {
+            const tbody = document.getElementById('tbody-recent');
+            if(!tbody || !ALL_TRANSACTIONS) return;
+            
+            tbody.innerHTML = '';
+            const sorted = [...ALL_TRANSACTIONS].sort((a,b) => b.id - a.id).slice(0, 5);
+            
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:var(--text-3);">No hay movimientos recientes</td></tr>';
+                return;
+            }
+            
+            sorted.forEach(t => {
+                const row = document.createElement('tr');
+                const sign = t.amount > 0 ? '+' : '';
+                const color = t.amount > 0 ? 'var(--green)' : 'var(--text)';
+                row.innerHTML = `
+                    <td style="padding:12px 22px; width:100px; font-size:12px; color:var(--text-3);">${t.date}</td>
+                    <td style="padding:12px 22px; font-size:13px; font-weight:500;">${t.description}</td>
+                    <td style="padding:12px 22px; font-size:13px; font-weight:700; text-align:right; color:${color};">${sign}${t.amount}€</td>
+                    <td style="padding:12px 22px; width:150px; text-align:right;">
+                        <span class="badge" style="background:var(--bg); color:var(--text-2); font-size:10px;">${t.category || 'Sin Cat.'}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
         init();
     </script>

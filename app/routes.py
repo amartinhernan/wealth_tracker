@@ -416,8 +416,8 @@ def import_transactions():
     with open("import_debug.log", "w", encoding="utf-8") as f:
         f.write("\n".join(debug_log))
     
-    # Lógica de Bizums (Post-import)
-    match_bizums()
+    # Lógica de Bizums (Post-import) - Desactivada por petición del usuario para que solo clasifique
+    # match_bizums()
     
     return jsonify({'imported': new_count})
 

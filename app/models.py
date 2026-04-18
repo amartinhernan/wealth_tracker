@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -25,6 +26,7 @@ class AssetConfig(db.Model):
     ticker = db.Column(db.String(50)) # Ticker de Yahoo (ej: VUSA.L) o ID de CoinGecko
     holdings = db.Column(db.Float, default=0.0)
     invested_total = db.Column(db.Float, default=0.0)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)  # Última actualización manual de holdings
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)

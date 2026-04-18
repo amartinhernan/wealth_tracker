@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.models import db, Asset, AssetConfig
+from app.models import db, Asset, AssetConfig, Transaction
 from .pricing import fetch_stock_price, fetch_crypto_price, fetch_crypto_price_batch, get_conversion_to_eur
 from .indexa import fetch_indexa_data
 
@@ -42,6 +42,15 @@ def sync_managed_assets():
         if conf.subtype == 'cash':
             actual_price_eur = 1.0
             actual_money = conf.holdings
+            if conf.type == 'auto' and conf.ticker:
+                # Solo sumar transacciones POSTERIORES a la última actualización manual
+                tx_query = db.session.query(db.func.sum(Transaction.amount)).filter(
+                    Transaction.source == conf.ticker
+                )
+                if conf.updated_at:
+                    tx_query = tx_query.filter(Transaction.date > conf.updated_at)
+                tx_sum = tx_query.scalar() or 0.0
+                actual_money = conf.holdings + tx_sum
             
         # 2. INDEXA
         elif conf.subtype == 'indexa':

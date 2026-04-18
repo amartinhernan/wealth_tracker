@@ -1,0 +1,86 @@
+<div id="page-transactions" style="display:none">
+                <div class="page-head">
+                    <div>
+                        <h1 class="page-title">Transacciones</h1>
+                        <p class="page-sub">Importa, agrupa y categoriza tus movimientos bancarios</p>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <button class="btn-action" onclick="openCategoryModal()">Gestionar Categorías</button>
+                        <select id="import-source" class="btn-action" style="cursor:pointer;min-width:160px">
+                            <option value="SANTANDER">Santander (Excel)</option>
+                            <option value="REVOLUT">Revolut (CSV)</option>
+                            <option value="EDENRED">Edenred (Excel)</option>
+                        </select>
+                        <input type="file" id="import-file" style="display:none" onchange="handleFileUpload(this)">
+                        <button class="btn-action btn-primary" onclick="document.getElementById('import-file').click()">
+                            <svg viewBox="0 0 24 24"
+                                style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                            </svg>
+                            Importar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="tx-toolbar">
+                    <div class="tx-search-wrap" style="flex:1; min-width: 180px;">
+                        <svg class="tx-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                        </svg>
+                        <input type="text" id="tx-search" placeholder="Buscar palabra clave..."
+                            oninput="debouncedRenderTransactions()">
+                    </div>
+                    
+                    <input type="text" id="filter-col-cat" class="tx-select" placeholder="Categoría (ej: Comida)" oninput="debouncedRenderTransactions()" style="width: 160px;">
+                    
+                    <select id="filter-col-source" class="tx-select" onchange="debouncedRenderTransactions()">
+                        <option value="">Todas las cuentas</option>
+                        <option value="SANTANDER">Santander</option>
+                        <option value="REVOLUT">Revolut</option>
+                        <option value="EDENRED">Edenred</option>
+                    </select>
+                    
+                    <input type="month" id="filter-col-date" class="tx-select" onchange="debouncedRenderTransactions()" style="width: 130px; cursor: pointer;">
+                    
+                    <input type="number" id="filter-col-amount" class="tx-select" placeholder="Cantidad €" oninput="debouncedRenderTransactions()" style="width: 110px;">
+
+                    <select id="filter-type" class="tx-select" onchange="renderTransactionsTable()">
+                        <option value="ALL">Todo (+/-)</option>
+                        <option value="INC">Solo Ingresos</option>
+                        <option value="EXP">Solo Gastos</option>
+                    </select>
+                    
+                    <select id="filter-status" class="tx-select" onchange="renderTransactionsTable()">
+                        <option value="ALL">Estados: Todos</option>
+                        <option value="PENDING">Pendientes</option>
+                        <option value="REVIEWED">Revisados</option>
+                    </select>
+                </div>
+
+                <div class="tx-count" id="tx-count"></div>
+
+                <!-- Unlink zone -->
+                <div id="unlink-zone">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10" />
+                    </svg>
+                    Arrastra aquí para desvincular del grupo
+                </div>
+
+                <!-- Transactions container -->
+                <div class="tbl-section" id="transactions-container" style="overflow:visible">
+                    <div id="tbody-transactions-wrap"></div>
+                    <div id="no-transactions" style="padding:48px;text-align:center;color:var(--text-3)">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" style="margin-bottom:12px;opacity:.3">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <path d="M2 10h20" />
+                        </svg>
+                        <p style="font-size:14px;font-weight:500">No hay transacciones cargadas</p>
+                        <p style="font-size:12px;margin-top:4px">Importa un archivo para empezar</p>
+                    </div>
+                </div>
+            </div><!-- end page-transactions -->

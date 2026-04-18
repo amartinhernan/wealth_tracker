@@ -483,6 +483,7 @@ def save_config():
     conf.ticker = data.get('ticker')
     conf.holdings = float(data.get('holdings', 0))
     conf.invested_total = float(data.get('invested_total', 0))
+    conf.updated_at = datetime.utcnow()  # Marcar cuándo fue la última actualización manual
     
     db.session.commit()
     # Sincronizamos inmediatamente para que los cambios se vean en el dashboard
@@ -513,6 +514,53 @@ def trigger_sync_all():
         "status": "success",
         "managed": managed_res
     })
+
+@main_bp.route('/api/portfolio/analysis', methods=['POST'])
+def portfolio_analysis():
+    import os, json
+    try:
+        from groq import Groq
+    except ImportError:
+        return jsonify({"summary": "Error: Librería Groq no instalada.", "items": []}), 500
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return jsonify({"summary": "Error: GROQ_API_KEY no configurada en las variables de entorno.", "items": []}), 500
+
+    data = request.json or {}
+    portfolio_summary = data.get('portfolio', '')
+
+    prompt = f"""
+    Eres un asesor financiero experto. Analiza el portfolio del usuario y genera exactamente 3 bullets de insights concisos y accionables en español. 
+    Responde ÚNICAMENTE con un JSON en este formato exacto: {{"summary":"frase corta de 1 línea sobre el estado del portfolio","items":[{{"icon":"emoji","text":"insight accionable"}}]}} - 3 items exactamente. Sé específico con los números.
+    
+    Portfolio:
+    {portfolio_summary}
+    """
+
+    try:
+        client = Groq(api_key=api_key)
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Eres un asistente financiero que sólo responde en formato JSON sin formato de bloques de código markdown."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"}
+        )
+        # Parse output safely
+        raw_output = chat_completion.choices[0].message.content
+        res = json.loads(raw_output)
+        return jsonify(res)
+    except Exception as e:
+        print(f"Error calling Groq API: {e}")
+        return jsonify({"summary": f"No se pudo completar el análisis IA: {str(e)}", "items": []}), 500
 
 @main_bp.route('/api/search')
 def search():

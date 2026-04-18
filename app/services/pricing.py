@@ -58,10 +58,15 @@ def fetch_stock_price(ticker):
             hist = t.history(period="1d")
             if not hist.empty:
                 last_price = float(hist['Close'].iloc[-1])
+            else:
+                return None
             
         # Moneda como último recurso desde info
         if not currency:
-            currency = t.info.get('currency', 'EUR')
+            try:
+                currency = t.info.get('currency', 'EUR')
+            except Exception:
+                currency = 'EUR'
 
         if last_price:
             if currency == 'GBp': # Peniques londinenses

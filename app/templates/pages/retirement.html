@@ -1,0 +1,133 @@
+<!-- ════════════════════ FREEDOM MULTIVERSE ════════════════════ -->
+
+            <div id="page-retirement" style="display:none">
+                <div class="page-head">
+                    <div>
+                        <h1 class="page-title">Estrategia ✦</h1>
+                        <p class="page-sub">Escenarios de vida basados en tu patrimonio actual y capacidad de ahorro</p>
+                    </div>
+                </div>
+
+                <!-- Configurador Global -->
+                <div class="card" style="padding:16px 24px; margin-bottom: 24px;">
+                    <div class="config-grid">
+                        <div class="form-group">
+                            <label class="form-label">Ingreso Mensual (€) <button class="magic-btn" onclick="fillFinancials('income')" title="Deducir de mi historial">🪄</button></label>
+                            <input type="number" id="m-income" class="form-input" value="2400" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subida Salarial Anual (%)</label>
+                            <input type="number" id="m-inc-growth" class="form-input" value="3" step="0.5" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gasto Mensual (€) <button class="magic-btn" onclick="fillFinancials('expense')" title="Deducir de mi historial">🪄</button></label>
+                            <input type="number" id="m-spend" class="form-input" value="1800" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Inflación/Vida Anual (%)</label>
+                            <input type="number" id="m-exp-growth" class="form-input" value="2.5" step="0.5" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ROI Inversiones (%)</label>
+                            <input type="number" id="m-roi" class="form-input" value="7" step="0.5" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">% Ahorro Invertido <span title="¿Qué porcentaje del ahorro mensual vas a invertir en activos con ROI?" style="cursor:help;opacity:0.6">ⓘ</span></label>
+                            <input type="number" id="m-invest-rate" class="form-input" value="80" min="0" max="100" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Aportación Extra (€)</label>
+                            <input type="number" id="m-save" class="form-input" value="0" oninput="updateMultiverse()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Horizonte (Años)</label>
+                            <input type="number" id="m-years" class="form-input" value="20" oninput="updateMultiverse()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="strategy-layout">
+                    <!-- Left: Large Projection Chart -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <div class="card" style="padding: 24px;">
+                            <div class="card-head" style="margin-bottom: 20px;">
+                                <div class="card-title">Proyección de Patrimonio</div>
+                            </div>
+                            <div style="height:500px; position:relative">
+                                <canvas id="multiverseChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- ─────── HITOS DE VIDA ─────── -->
+                        <div class="card" style="padding:24px">
+                            <div class="card-head" style="margin-bottom:12px">
+                                <div class="card-title">Hitos y Gastos Extraordinarios</div>
+                            </div>
+                            <p style="font-size:12px; color:var(--text-3); margin-bottom:16px">
+                                Bodas, entradas de piso o viajes. Estos hitos impactan directamente en tu interés compuesto.
+                            </p>
+                            
+                            <div id="hito-list" class="hito-list">
+                                <!-- JS items -->
+                            </div>
+
+                            <div class="hito-form">
+                                <input type="text" id="h-name" class="form-input" placeholder="Descripción...">
+                                <input type="number" id="h-val" class="form-input" placeholder="Importe (€)">
+                                <input type="month" id="h-date" class="form-input">
+                                <div style="display:flex; align-items:center; gap:8px; padding:0 8px">
+                                    <input type="checkbox" id="h-recurring" style="cursor:pointer">
+                                    <label for="h-recurring" style="font-size:12px;cursor:pointer">Recurrente</label>
+                                </div>
+                                <button class="btn-primary" onclick="addHito()" style="padding:0 16px">Añadir</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Compact Scenarios Sidebar -->
+                    <div class="verse-grid">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; padding-left: 4px;">Escenarios Estratégicos</div>
+                        
+                        <!-- Scenario 1: Startup -->
+                        <div class="verse-card active" onclick="selectVerse('startup')" id="v-startup">
+                            <div class="quantum-orb"></div>
+                            <div class="verse-icon">🚀</div>
+                            <div class="verse-title">Runway / Survival</div>
+                            <div class="verse-desc">¿Cuánto tiempo aguantarías si hoy dejas de ingresar?</div>
+                            <div class="verse-stat" id="stat-runway">--</div>
+                            <div class="verse-label">Meses de supervivencia</div>
+                            <div class="runway-progress"><div class="runway-fill" id="runway-bar" style="width:0%"></div></div>
+                        </div>
+
+                        <!-- Scenario 2: Nomad -->
+                        <div class="verse-card" onclick="selectVerse('nomad')" id="v-nomad">
+                            <div class="verse-icon">🌍</div>
+                            <div class="verse-title">Nómada Digital (SWR)</div>
+                            <div class="verse-desc">Libertad teórica basada en la regla del 4% (SWR).</div>
+                            <div id="nomad-tiers">
+                                <div class="nomad-tier"><span class="tier-label">Sudeste Asiático</span><span id="tier-sea" class="tier-locked">Locked</span></div>
+                                <div class="nomad-tier"><span class="tier-label">Europa Este</span><span id="tier-ee" class="tier-locked">Locked</span></div>
+                                <div class="nomad-tier"><span class="tier-label">España / Portugal</span><span id="tier-es" class="tier-locked">Locked</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Scenario 3: Gap Year -->
+                        <div class="verse-card" onclick="selectVerse('gap')" id="v-gap">
+                            <div class="verse-icon">⌛</div>
+                            <div class="verse-title">El Año Sabático</div>
+                            <div class="verse-desc">Impacto de parar hoy 12 meses en tu yo del futuro.</div>
+                            <div class="verse-stat" id="stat-gap-cost">--</div>
+                            <div class="verse-label">Costo de oportunidad</div>
+                        </div>
+
+                        <!-- Scenario 4: Compounder -->
+                        <div class="verse-card" onclick="selectVerse('compound')" id="v-compound">
+                            <div class="verse-icon">🌱</div>
+                            <div class="verse-title">The Compounder</div>
+                            <div class="verse-desc">Tu patrimonio futuro si nunca más vuelves a ahorrar.</div>
+                            <div class="verse-stat" id="stat-comp-final">--</div>
+                            <div class="verse-label">Interés compuesto</div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end page-retirement -->

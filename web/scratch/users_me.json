@@ -1,0 +1,298 @@
+{
+  "document": "05444474Y",
+  "password_changed_at": "2022-03-25 10:37:54",
+  "has_any_funded_account": true,
+  "is_blacklisted": false,
+  "profiles": [],
+  "accounts": [
+    {
+      "id": 114742,
+      "account_number": "9MFQHRUN",
+      "account_type": "personal",
+      "provider_code": "INV",
+      "provider": {
+        "name": "Inversis",
+        "description": "Inversis Banco",
+        "locale": [
+          "es"
+        ],
+        "provider_market": "011",
+        "provider_market_string": "esp"
+      },
+      "cancelled_at": null,
+      "currency": "EUR",
+      "funded_at": "2022-12-22 00:00:00",
+      "created_at": "2022-12-17 17:47:41",
+      "expected_return": 0.048,
+      "funding": "total",
+      "pbc_risk": "low",
+      "platform_code": "indexa",
+      "profile": {
+        "account_number": "9MFQHRUN",
+        "answers": {
+          "style": "capitalization",
+          "investment": null,
+          "periodic_investment": null,
+          "provider": "CECA",
+          "lose_money": 1,
+          "style_isr": null,
+          "cash_personal_asset_class": 0,
+          "is_company": null,
+          "goal": 4,
+          "attitude": 3,
+          "risk": 3,
+          "experience": 2,
+          "income": 45000,
+          "age": 27,
+          "stability": 1,
+          "expenses": 75,
+          "wealth": 41000,
+          "horizon": 100,
+          "style_isr_criteria": {
+            "criteria_1_environmental_value": null,
+            "criteria_1_environmental_choice": false,
+            "criteria_2_sustainable_value": null,
+            "criteria_2_sustainable_choice": false,
+            "criteria_3_incidents_text_value": null,
+            "criteria_3_incidents_choice": false
+          },
+          "objective": null,
+          "importance_saving_operation": null,
+          "importance_capital_transmission": null,
+          "importance_project_financing": null,
+          "importance_get_income_now": null,
+          "importance_get_future_income": null,
+          "importance_contract_as_guarantee_instrument": null,
+          "plan_type": null
+        },
+        "can_be_updated": true,
+        "document": {
+          "id": 53970940,
+          "type": "rep_profile",
+          "class": "report",
+          "name": "0dd8a586-df1c-11f0-8d59-06e87fe96931",
+          "originalName": "Test_de_idoneidad_22_12_2025.pdf",
+          "original_name": "Test_de_idoneidad_22_12_2025.pdf",
+          "showName": "Test de idoneidad - 22/12/2025",
+          "show_name": "Test de idoneidad - 22/12/2025",
+          "clean_show_name": "Test-de-idoneidad-22-12-2025.pdf",
+          "created_at": "2025-12-22 10:53:23",
+          "signed": false,
+          "path": "accounts/9MFQHRUN/0dd8a586-df1c-11f0-8d59-06e87fe96931",
+          "tags": [],
+          "ocr_extractions": [],
+          "check_status": "passed"
+        },
+        "id": "fe2c32fb-2fd1-4329-b880-7a86666a65db",
+        "investment": 3000.0,
+        "periodic_investment": 200,
+        "must_be_updated": false,
+        "profile_changes_last_12_months": 1,
+        "risk": {
+          "tolerance": 10,
+          "capacity": 10,
+          "total": 10
+        },
+        "selected_risk": 10,
+        "previous_risk": 9,
+        "type": "mutual",
+        "style": "capitalization",
+        "user_email": "amartinhernan@gmail.com",
+        "history_documents": [
+          {
+            "id": 36706404,
+            "type": "rep_profile",
+            "class": "report",
+            "name": "85b9e25a-7e2a-11ed-b8bb-0689de8f1e89",
+            "originalName": "Test_de_idoneidad_17_12_2022.pdf",
+            "original_name": "Test_de_idoneidad_17_12_2022.pdf",
+            "showName": "Test de idoneidad - 17/12/2022",
+            "show_name": "Test de idoneidad - 17/12/2022",
+            "clean_show_name": "Test-de-idoneidad-17-12-2022.pdf",
+            "created_at": "2022-12-17 17:47:41",
+            "signed": false,
+            "path": "accounts/9MFQHRUN/85b9e25a-7e2a-11ed-b8bb-0689de8f1e89",
+            "tags": [],
+            "ocr_extractions": [],
+            "check_status": "passed"
+          },
+          {
+            "id": 40866933,
+            "type": "rep_profile",
+            "class": "report",
+            "name": "05cc50c8-9d82-11ee-a0ff-061ef7185b93",
+            "originalName": "Test_de_idoneidad_18_12_2023.pdf",
+            "original_name": "Test_de_idoneidad_18_12_2023.pdf",
+            "showName": "Test de idoneidad - 18/12/2023",
+            "show_name": "Test de idoneidad - 18/12/2023",
+            "clean_show_name": "Test-de-idoneidad-18-12-2023.pdf",
+            "created_at": "2023-12-18 09:47:06",
+            "signed": false,
+            "path": "accounts/9MFQHRUN/05cc50c8-9d82-11ee-a0ff-061ef7185b93",
+            "tags": [],
+            "ocr_extractions": [],
+            "check_status": "passed"
+          },
+          {
+            "id": 53970940,
+            "type": "rep_profile",
+            "class": "report",
+            "name": "0dd8a586-df1c-11f0-8d59-06e87fe96931",
+            "originalName": "Test_de_idoneidad_22_12_2025.pdf",
+            "original_name": "Test_de_idoneidad_22_12_2025.pdf",
+            "showName": "Test de idoneidad - 22/12/2025",
+            "show_name": "Test de idoneidad - 22/12/2025",
+            "clean_show_name": "Test-de-idoneidad-22-12-2025.pdf",
+            "created_at": "2025-12-22 10:53:23",
+            "signed": false,
+            "path": "accounts/9MFQHRUN/0dd8a586-df1c-11f0-8d59-06e87fe96931",
+            "tags": [],
+            "ocr_extractions": [],
+            "check_status": "passed"
+          }
+        ],
+        "locale": "es",
+        "created_at": "2022-12-17 17:47:38",
+        "previous_style": "capitalization",
+        "updated_at": "2025-12-22 10:53:23",
+        "cash_personal_asset_class": 0
+      },
+      "reconciled_until": "2026-04-18 00:00:00",
+      "risk": 10,
+      "size": "medium",
+      "style": "capitalization",
+      "status": "active",
+      "status_pbc": "approved",
+      "status_provider": "active",
+      "type": "mutual",
+      "postal_address": {
+        "country": {
+          "id": 11,
+          "iso_alpha_1": "724",
+          "iso_alpha_2": "ES",
+          "iso_alpha_3": "ESP",
+          "code": "011",
+          "codigo": "011",
+          "description": "Espa\u00f1a",
+          "ue": true,
+          "accepted": true
+        },
+        "state": "28",
+        "street_type": "CL",
+        "street_name": "Calle Parque Bujaruelo",
+        "street_number": "27",
+        "city_name": "Alcorcon",
+        "city": 32472,
+        "postal_code": "28924",
+        "provincia": "28",
+        "full_address": "Calle Calle Parque Bujaruelo 27, piso 6, puerta A",
+        "total_address": "Calle Calle Parque Bujaruelo 27, piso 6, puerta A, 28924 Alcorcon (Madrid, Espa\u00f1a)",
+        "state_name": "Madrid",
+        "portal": null,
+        "door": "A",
+        "floor": "6",
+        "block": null,
+        "stairs": null
+      },
+      "can_do_transfer": true,
+      "can_request_fund_transfer": false,
+      "needs_funds_proof_document": false,
+      "needs_occupation_activity_document": false,
+      "num_holders": 1,
+      "main_holder_name": "Alejandro",
+      "pending_signers_document": [],
+      "signers_document": [],
+      "account_instruments": "02320467490038765523",
+      "account_cash": "ES7802320467400038765519",
+      "activated_at": "2022-12-23 00:00:00",
+      "activated_provider_at": "2022-12-19 00:00:00",
+      "needs_us_required_docs": false,
+      "main_holder": [],
+      "on_renounce_period": false,
+      "is_contract_signed": true,
+      "certificate_types": [
+        "certificate_discretionary_management",
+        "certificate_ownership_positions"
+      ],
+      "preferences": {
+        "chart_cash_return": {
+          "type": "vol"
+        },
+        "chart": {
+          "type": "per",
+          "range": {
+            "type": "all",
+            "value": "0"
+          }
+        },
+        "new_contribution_investable": "0"
+      },
+      "blocking_reasons": [],
+      "parameters": [],
+      "locale": "es",
+      "fee_free_amount": 0.0,
+      "has_active_rewards": false,
+      "contract_last_signer_signature_date": "2022-12-17 17:53:05",
+      "reference": null,
+      "user_has_other_funded_accounts": false,
+      "plan_id": 2376,
+      "user_relations": [
+        {
+          "user": "amartinhernan@gmail.com",
+          "relation": "owner"
+        }
+      ],
+      "contract": {
+        "status": "approved"
+      },
+      "user_holder_type": "TIP",
+      "role": "owner"
+    }
+  ],
+  "accounts_relations": [
+    {
+      "account_number": "9MFQHRUN",
+      "relation": "owner",
+      "funded_at": "2022-12-22 00:00:00"
+    }
+  ],
+  "insurances_relations": [],
+  "person": [],
+  "can_take_insurance": true,
+  "show_insurance": true,
+  "can_take_private_markets": false,
+  "has_active_mutual_account_for_you": true,
+  "has_mutual_account_active": true,
+  "id": 84094,
+  "created_at": "2022-03-04 13:52:49",
+  "username": "amartinhernan@gmail.com",
+  "email": "amartinhernan@gmail.com",
+  "user_name": "Alejandro",
+  "surname2": "HERN\u00c1N",
+  "document_type": "country_id",
+  "is_activated": true,
+  "phone_activated": true,
+  "email_activated": true,
+  "affiliate_code": "IgaDFN",
+  "preferences": {
+    "last_account_visited": 114742,
+    "hide_amounts": "false",
+    "hide_hello_bar": "2025",
+    "financial_planning": "eyJtb250aGx5X291dGZsb3ciOjE1MDAsIm1vbnRobHlfaW5mbG93Ijo1MDAsInllYXJfb2ZfcmV0aXJlbWVudCI6NjcsImN1cnJlbnRfZXh0cmFfaW52ZXN0bWVudCI6MzAwMH0=",
+    "chart": {
+      "type": "vol",
+      "range": {
+        "type": "all",
+        "value": "0"
+      },
+      "ignored": ""
+    },
+    "chart_cash_return": {
+      "type": "per"
+    }
+  },
+  "locale": "es",
+  "admin_name": "",
+  "has_received_invitations_candidate": false,
+  "document_description": "Documento de identidad"
+}

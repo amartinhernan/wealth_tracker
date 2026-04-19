@@ -1,0 +1,16 @@
+# Environments
+.env
+
+# Credentials
+*.json
+!firebase.json
+!firestore.indexes.json
+
+# Logs
+*.log
+
+# Directory
+venv/
+scratch/
+__pycache__/
+instance/

@@ -1,0 +1,70 @@
+<aside class="sidebar" id="sidebar">
+    <!-- Toggle Button -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Colapsar barra lateral">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </button>
+
+    <!-- User Profile Header -->
+    <div class="user-block">
+        <div id="user-photo" class="user-avatar">?</div>
+        <div class="user-info">
+            <div id="user-name" class="user-name">Cargando...</div>
+        </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="logo">
+        <div class="logo-mark">
+            <svg viewBox="0 0 24 24">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                <polyline points="16 7 22 7 22 13" />
+            </svg>
+        </div>
+        <span class="logo-name">TrackWealth</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a class="nav-item active" href="#" id="nav-dashboard" onclick="showPage('dashboard');return false">
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="9" rx="1" />
+                <rect x="14" y="3" width="7" height="5" rx="1" />
+                <rect x="14" y="12" width="7" height="9" rx="1" />
+                <rect x="3" y="16" width="7" height="5" rx="1" />
+            </svg>
+            <span>Portfolio</span>
+        </a>
+        <a class="nav-item" href="#" id="nav-transactions" onclick="showPage('transactions');return false">
+            <svg viewBox="0 0 24 24">
+                 <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+            </svg>
+            <span>Transacciones</span>
+        </a>
+        <a class="nav-item" href="#" id="nav-finanzas" onclick="showPage('finanzas');return false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            </svg>
+            <span>Inteligencia AI</span>
+        </a>
+        <a class="nav-item" href="#" id="nav-retirement" onclick="showPage('retirement');return false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            <span>Multiversos ✦</span>
+        </a>
+    </nav>
+
+    <!-- Logout & Foot -->
+    <div style="margin-top:auto;">
+        <a class="nav-item logout-item" href="#" onclick="logout();return false" style="color:var(--red); opacity:0.9">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            <span>Cerrar Sesión</span>
+        </a>
+        <div class="sidebar-foot" id="sfoot" style="margin-top: 10px; font-size:9px;">UID: ...</div>
+    </div>
+</aside>

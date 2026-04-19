@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Firebase y Secretos
+wealthtracker-*-firebase-adminsdk-*.json
+
+# Datos Locales
+instance/*.db
+import_debug.log
+
+# Git
+.git
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db

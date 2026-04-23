@@ -1,10 +1,15 @@
 import requests
+import pandas as pd
+import io
+import os
 from datetime import datetime
 from flask import Blueprint, render_template, jsonify, request
 from app.services.returns import calculate_returns
 from app.services.indexa import fetch_indexa_data
 from app.services.sync import sync_managed_assets
 from app.services.pricing import search_tickers, search_crypto
+from app.services.parsers import BankParser
+from app.services.ai_categorizer import AICategorizer
 from app.firebase_utils import token_required, get_user_subcollection, db_fs, firestore_to_dict
 
 main_bp = Blueprint('main', __name__)
@@ -223,6 +228,7 @@ def update_transaction(uid, id):
     
     # Mapeo de campos frontend a Firestore
     update_data = {}
+    if 'description' in data: update_data['description'] = data['description']
     if 'category' in data: 
         update_data['category_name'] = data['category']
         update_data['category'] = data['category'] # Double save for compatibility
@@ -268,13 +274,68 @@ def get_categories(uid):
 @token_required
 def add_category(uid):
     data = request.json
-    if not data.get('name'): return jsonify({"error": "Name required"}), 400
+    name = data.get('name')
+    if not name: return jsonify({"error": "Name required"}), 400
     
     cat_ref = get_user_subcollection(uid, 'categories')
-    # Usar timestamp como ID para mantener consistencia con los IDs de SQLite migrados
-    new_id = str(int(datetime.now().timestamp() * 1000))
-    cat_ref.document(new_id).set({'name': data['name']})
-    return jsonify({"status": "success", "id": new_id})
+    cat_id = data.get('id')
+    
+    if cat_id:
+        # Update existing
+        cat_ref.document(cat_id).update({'name': name})
+        return jsonify({"status": "success", "id": cat_id})
+    else:
+        # Create new
+        new_id = str(int(datetime.now().timestamp() * 1000))
+        cat_ref.document(new_id).set({'name': name})
+        return jsonify({"status": "success", "id": new_id})
+
+@main_bp.route('/api/categories/<id>', methods=['DELETE'])
+@token_required
+def delete_category(uid, id):
+    try:
+        cat_ref = get_user_subcollection(uid, 'categories')
+        cat_ref.document(id).delete()
+        # Also delete associated subcategories for cleanliness
+        subs_ref = get_user_subcollection(uid, 'subcategories')
+        subs = subs_ref.where('category_id', '==', id).get()
+        for s in subs:
+            s.reference.delete()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/subcategories', methods=['POST'])
+@token_required
+def save_subcategory(uid):
+    data = request.json
+    name = data.get('name')
+    if not name: return jsonify({"error": "Name required"}), 400
+    
+    sub_ref = get_user_subcollection(uid, 'subcategories')
+    sub_id = data.get('id')
+    
+    if sub_id:
+        # Update existing
+        sub_ref.document(sub_id).update({'name': name})
+        return jsonify({"status": "success", "id": sub_id})
+    else:
+        # Create new
+        cat_id = data.get('category_id')
+        if not cat_id: return jsonify({"error": "Category ID required"}), 400
+        new_id = str(int(datetime.now().timestamp() * 1000 + 1))
+        sub_ref.document(new_id).set({'name': name, 'category_id': cat_id})
+        return jsonify({"status": "success", "id": new_id})
+
+@main_bp.route('/api/subcategories/<id>', methods=['DELETE'])
+@token_required
+def delete_subcategory(uid, id):
+    try:
+        sub_ref = get_user_subcollection(uid, 'subcategories')
+        sub_ref.document(id).delete()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @main_bp.route('/api/configs', methods=['GET'])
 @token_required
@@ -333,3 +394,208 @@ def portfolio_analysis(uid):
         "analysis": "Tu cartera tiene una buena diversificación. Considera aumentar el peso en ETFs si buscas menos volatilidad.",
         "risk_level": "Moderado"
     })
+
+@main_bp.route('/api/transactions/import', methods=['POST'])
+@token_required
+def import_transactions(uid):
+    source = request.form.get('source')
+    file = request.files.get('file')
+    
+    if not file:
+        return jsonify({'error': 'No file uploaded'}), 400
+        
+    file_content = file.read()
+    
+    # Seleccionar parser
+    if source == 'REVOLUT':
+        items = BankParser.parse_revolut(file_content)
+    elif source == 'SANTANDER':
+        items = BankParser.parse_santander(file_content)
+    elif source == 'EDENRED':
+        items = BankParser.parse_edenred(file_content)
+    else:
+        return jsonify({'error': 'Invalid source'}), 400
+
+    # Obtener transacciones existentes para evitar duplicados
+    tx_ref = get_user_subcollection(uid, 'transactions')
+    existing_docs = tx_ref.get()
+    
+    # Mapa para deduplicación: (fecha_str, importe, descripción, fuente)
+    existing_sigs = set()
+    for doc in existing_docs:
+        d = doc.to_dict()
+        dt = d.get('date')
+        if hasattr(dt, 'strftime'):
+            dt_str = dt.strftime('%Y-%m-%d')
+        else:
+            dt_str = str(dt)[:10]
+        
+        sig = (dt_str, float(d.get('amount', 0)), d.get('description', ''), d.get('source', ''))
+        existing_sigs.add(sig)
+
+    new_count = 0
+    debug_log = []
+    def log(msg):
+        debug_log.append(f"{datetime.now().isoformat()} - {msg}")
+
+    log(f"Iniciando importación de {len(items)} transacciones para {source}")
+    
+    categorizer = AICategorizer()
+    
+    # Cache de categorías y subcategorías
+    cat_ref = get_user_subcollection(uid, 'categories')
+    cat_docs = cat_ref.get()
+    cat_map = {doc.to_dict()['name'].lower(): doc.id for doc in cat_docs}
+    
+    sub_ref = get_user_subcollection(uid, 'subcategories')
+    sub_docs = sub_ref.get()
+    sub_map = {}
+    for s_doc in sub_docs:
+        s = s_doc.to_dict()
+        key = f"{s.get('category_id')}_{s.get('name', '').lower()}"
+        sub_map[key] = s_doc.id
+
+    for item in items:
+        dt_str = item['date'].strftime('%Y-%m-%d')
+        sig = (dt_str, float(item['amount']), item['description'], item['source'])
+        
+        if sig in existing_sigs:
+            log(f"IGNORADA (Duplicada): {dt_str} - {item['amount']} - {item['description'][:30]}")
+            continue
+
+        # Clasificación por IA
+        try:
+            cat_name, sub_name = categorizer.categorize(uid, item['description'], item['amount'])
+        except Exception as e:
+            print(f"Error categorizing with AI: {e}")
+            cat_name, sub_name = None, None
+
+        c_id = cat_map.get(cat_name.lower()) if cat_name else None
+        s_key = f"{c_id}_{sub_name.lower()}" if c_id and sub_name else None
+        s_id = sub_map.get(s_key) if s_key else None
+
+        # Guardar en Firestore
+        tx_ref.add({
+            'date': item['date'],
+            'description': item['description'],
+            'amount': item['amount'],
+            'source': item['source'],
+            'raw_text': item['raw_text'],
+            'is_income': item['is_income'],
+            'category_id': c_id,
+            'subcategory_id': s_id,
+            'created_at': datetime.now()
+        })
+        new_count += 1
+        log(f"NUEVA: {dt_str} - {item['amount']} - {item['description'][:30]}")
+
+    # Guardar log de diagnóstico
+    try:
+        with open("import_debug.log", "w", encoding="utf-8") as f:
+            f.write("\n".join(debug_log))
+    except:
+        pass
+
+    return jsonify({'status': 'success', 'imported': new_count})
+
+@main_bp.route('/api/transactions/<id>', methods=['DELETE'])
+@token_required
+def delete_transaction(uid, id):
+    try:
+        tx_ref = get_user_subcollection(uid, 'transactions')
+        tx_ref.document(id).delete()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/transactions/link', methods=['POST'])
+@token_required
+def link_transactions(uid):
+    data = request.json
+    parent_id = data.get('parent_id')
+    child_id = data.get('child_id')
+    
+    if not parent_id or not child_id:
+        return jsonify({"status": "error", "message": "Missing IDs"}), 400
+        
+    try:
+        tx_ref = get_user_subcollection(uid, 'transactions')
+        tx_ref.document(child_id).update({
+            'linked_transaction_id': parent_id
+        })
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/transactions/unlink', methods=['POST'])
+@token_required
+def unlink_transaction(uid):
+    data = request.json
+    tx_id = data.get('id')
+    
+    if not tx_id:
+        return jsonify({"status": "error", "message": "Missing ID"}), 400
+        
+    try:
+        tx_ref = get_user_subcollection(uid, 'transactions')
+        tx_ref.document(tx_id).update({
+            'linked_transaction_id': None
+        })
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/subscriptions', methods=['GET'])
+@token_required
+def get_subscriptions(uid):
+    try:
+        sub_ref = get_user_subcollection(uid, 'subscriptions')
+        docs = sub_ref.get()
+        res = []
+        for doc in docs:
+            d = doc.to_dict()
+            d['id'] = doc.id
+            res.append(d)
+        return jsonify(res)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/subscriptions', methods=['POST'])
+@token_required
+def save_subscription(uid):
+    try:
+        data = request.json
+        sub_id = data.get('id')
+        sub_ref = get_user_subcollection(uid, 'subscriptions')
+        
+        # Clean data for firestore
+        clean_data = {
+            'name': data.get('name'),
+            'amount': float(data.get('amount', 0)),
+            'category': data.get('category', 'Suscripción'),
+            'dayOfMonth': int(data.get('dayOfMonth', 1)),
+            'isManual': data.get('isManual', True),
+            'active': data.get('active', True),
+            'updated_at': datetime.now()
+        }
+        
+        if sub_id:
+            sub_ref.document(sub_id).update(clean_data)
+        else:
+            clean_data['created_at'] = datetime.now()
+            doc_ref = sub_ref.add(clean_data)
+            sub_id = doc_ref[1].id
+            
+        return jsonify({"status": "success", "id": sub_id})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/subscriptions/<id>', methods=['DELETE'])
+@token_required
+def delete_subscription(uid, id):
+    try:
+        sub_ref = get_user_subcollection(uid, 'subscriptions')
+        sub_ref.document(id).delete()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500

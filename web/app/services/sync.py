@@ -34,6 +34,9 @@ def sync_managed_assets(uid):
     if crypto_ids:
         crypto_prices = fetch_crypto_price_batch(list(set(crypto_ids)))
 
+    # Cache for Indexa data to avoid redundant API calls within the same sync run
+    idx_res_cache = None
+
     for c in all_configs:
         name = c.get('name')
         # Para otros tipos de assets, el capital invertido es el baseline manual configurado
@@ -64,13 +67,50 @@ def sync_managed_assets(uid):
         # 2. INDEXA
         elif subtype == 'indexa':
             if c.get('type') == 'auto':
-                idx_res = fetch_indexa_data()
-                if idx_res.get('status') == 'success':
-                    d = idx_res.get('data', {})
-                    actual_money = d.get('actual_money', holdings)
-                    invested_total = d.get('total_invested', invested_total)
-                    twr = d.get('twr', 0.0)
-                    mwr = d.get('mwr', 0.0)
+                if idx_res_cache is None:
+                    idx_res_cache = fetch_indexa_data()
+                
+                if idx_res_cache.get('status') == 'success':
+                    d = idx_res_cache.get('data', {})
+                    accounts_map = d.get('accounts', {})
+                    
+                    # 1. Match by account_number
+                    acc_num = c.get('account_number')
+                    a_data = None
+                    
+                    if acc_num and acc_num in accounts_map:
+                        a_data = accounts_map[acc_num]
+                        print(f"DEBUG: Matched Indexa asset {name} by account_number {acc_num}")
+                    
+                    # 2. Match by risk profile (e.g. "Perfil 8" -> risk 8)
+                    if not a_data:
+                        import re
+                        match = re.search(r'PERFIL\s*(\d+)', name.upper())
+                        if match:
+                            target_risk = int(match.group(1))
+                            for an, ad in accounts_map.items():
+                                if ad.get('risk') == target_risk:
+                                    a_data = ad
+                                    print(f"DEBUG: Matched Indexa asset {name} by risk {target_risk}")
+                                    break
+                    
+                    # 3. Fallback: if there's only one account in the API, use it
+                    if not a_data and len(accounts_map) == 1:
+                        a_data = list(accounts_map.values())[0]
+                        print(f"DEBUG: Matched Indexa asset {name} as the only available account")
+
+                    if a_data:
+                        actual_money = a_data.get('actual_money', 0.0)
+                        invested_total = a_data.get('total_invested', invested_total)
+                        twr = a_data.get('twr', 0.0)
+                        mwr = a_data.get('mwr', 0.0)
+                    else:
+                        # 4. Final resort: aggregate data (legacy behavior)
+                        actual_money = d.get('actual_money', holdings)
+                        invested_total = d.get('total_invested', invested_total)
+                        twr = d.get('twr', 0.0)
+                        mwr = d.get('mwr', 0.0)
+                        print(f"DEBUG: Using Indexa aggregate for {name}")
                 else:
                     actual_money = holdings
             else:

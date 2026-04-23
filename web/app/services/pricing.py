@@ -53,12 +53,16 @@ def fetch_stock_price(ticker):
         last_price = info.get('last_price')
         currency = info.get('currency')
         
-        # Si falló, intentamos history (más lento pero fiable)
+        # Si falló, intentamos history con varios periodos (fallback para cierres de mercado)
         if not last_price:
-            hist = t.history(period="1d")
-            if not hist.empty:
-                last_price = float(hist['Close'].iloc[-1])
-            else:
+            for period in ["1d", "5d", "1mo"]:
+                hist = t.history(period=period)
+                if not hist.empty:
+                    last_price = float(hist['Close'].iloc[-1])
+                    print(f"DEBUG: Found price for {ticker} using period={period}: {last_price}")
+                    break
+            
+            if not last_price:
                 return None
             
         # Moneda como último recurso desde info

@@ -1,219 +1,260 @@
+<style>
+    /* Estilos específicos para la UI de Finanzas */
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        margin-top: 12px;
+    }
+
+    .cal-day {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 6px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-2);
+        font-weight: 600;
+        position: relative;
+        cursor: default;
+        transition: border-color 0.2s;
+    }
+
+    .cal-day:hover {
+        border-color: var(--text-3);
+    }
+
+    .cal-day.has-sub {
+        border-color: var(--crypto);
+        color: var(--text);
+        background: rgba(124, 58, 237, 0.03);
+    }
+
+    .cal-dot {
+        width: 4px;
+        height: 4px;
+        background: var(--crypto);
+        border-radius: 50%;
+        margin: 2px auto 0;
+    }
+
+    .fin-filter-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: var(--bg);
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .fin-select {
+        background: transparent;
+        border: none;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-2);
+        outline: none;
+        cursor: pointer;
+        padding-right: 8px;
+    }
+
+    .fin-select:focus {
+        color: var(--accent);
+    }
+
+    .sub-action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        transition: background 0.15s;
+    }
+
+    .sub-action-btn:hover {
+        background: var(--bg2);
+    }
+
+    .inc-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border);
+        font-size: 12.5px;
+    }
+
+    .inc-row:last-child {
+        border-bottom: none;
+    }
+</style>
+
 <div id="page-finanzas" style="display:none">
-                <div class="page-head">
-                    <div>
-                        <h1 class="page-title">Inteligencia Financiera</h1>
-                        <p class="page-sub">Análisis de salud, patrones de gasto y previsiones</p>
-                    </div>
-                    <div class="health-pill" id="finance-health-score">Salud: Calculando...</div>
-                </div>
+    <div class="page-head">
+        <div>
+            <h1 class="page-title">Inteligencia Financiera</h1>
+            <p class="page-sub">Auditoría automática, patrones de gasto y suscripciones.</p>
+        </div>
+        <div class="health-pill" id="finance-health-score">Salud: Calculando...</div>
+    </div>
 
-                <!-- KPI row 1 -->
-                <div class="finance-kpi-grid">
-                    <div class="fi-card fi-card-accent">
-                        <div class="kpi-label"><span>Supervivencia (Runway)</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">¿Cuántos meses podrías vivir con tus ahorros actuales si mañana
-                                    perdieses todos los ingresos? Se calcula dividiendo tu patrimonio líquido entre el
-                                    gasto mensual promedio.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-runway">—</div>
-                        <div class="kpi-foot"><span class="kpi-sub">Meses cubiertos con ahorros</span></div>
-                    </div>
-                    <div class="fi-card fi-card-green">
-                        <div class="kpi-label"><span>Tasa de Ahorro Real</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Porcentaje de tus ingresos que queda disponible después de
-                                    gastos. Por encima del 20% es excelente; entre 10-20% es bueno; por debajo del 10%
-                                    requiere atención.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-saving-rate">—</div>
-                        <div class="kpi-foot" id="f-saving-foot"></div>
-                    </div>
-                    <div class="fi-card fi-card-red">
-                        <div class="kpi-label"><span>Burn Rate Mensual</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Gasto mensual promedio de los últimos meses, excluyendo
-                                    transferencias internas. Es tu coste de vida real.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-burn-rate">—</div>
-                        <div class="kpi-foot"><span class="kpi-sub">Gasto promedio mensual</span></div>
-                    </div>
-                    <div class="fi-card fi-card-purple">
-                        <div class="kpi-label"><span>Suscripciones Detectadas</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Pagos recurrentes detectados automáticamente por patrones de
-                                    importe y descripción similares que se repiten varios meses. Revísalos para detectar
-                                    servicios olvidados.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-recurring">—</div>
-                        <div class="kpi-foot"><span class="kpi-sub" id="f-recurring-count">Basado en patrones</span>
-                        </div>
-                    </div>
-                </div>
+    <div class="finance-kpi-grid">
+        <div class="fi-card fi-card-green"
+            style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="kpi-label"><span>Tasa de Ahorro</span></div>
+            <div class="kpi-val" id="f-saving-rate">—</div>
+            <div class="kpi-foot" id="f-saving-foot"></div>
+        </div>
 
-                <!-- KPI row 2 -->
-                <div class="finance-kpi-grid" style="margin-bottom:24px">
-                    <div class="fi-card">
-                        <div class="kpi-label"><span>Ingresos Últ. Mes</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Total de ingresos del mes más reciente con datos completos.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-last-inc">—</div>
-                    </div>
-                    <div class="fi-card">
-                        <div class="kpi-label"><span>Gastos Últ. Mes</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Total de gastos del mes más reciente con datos completos.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-last-exp">—</div>
-                    </div>
-                    <div class="fi-card">
-                        <div class="kpi-label"><span>Balance Últ. Mes</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Diferencia entre ingresos y gastos del último mes. Positivo =
-                                    ahorraste. Negativo = gastaste más de lo que ingresaste.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-last-balance">—</div>
-                    </div>
-                    <div class="fi-card">
-                        <div class="kpi-label"><span>Meses con datos</span>
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Número de meses con transacciones registradas. A más meses, más
-                                    precisas son las predicciones y promedios.</div>
-                            </div>
-                        </div>
-                        <div class="kpi-val" id="f-months-data">—</div>
-                    </div>
-                </div>
+        <div class="fi-card fi-card-red" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="kpi-label"><span>Burn Rate Mensual</span></div>
+            <div class="kpi-val" id="f-burn-rate">—</div>
+            <div class="kpi-foot"><span class="kpi-sub">Tu coste de vida mensual medio</span></div>
+        </div>
 
-                <!-- Main insight + chart row -->
-                <div class="row-main" style="margin-bottom:16px">
-                    <div class="card">
-                        <div class="card-head">
-                            <div class="card-title">
-                                Regla de Oro 50/30/20
-                                <div class="tip-wrap">
-                                    <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Método clásico de presupuesto: 50% para necesidades básicas
-                                        (vivienda, comida, servicios), 30% para deseos (ocio, ropa, restaurantes) y 20%
-                                        para ahorro e inversión.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="rule-503020-container"></div>
+        <div class="fi-card fi-card-accent"
+            style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="kpi-label"><span>Runway (Supervivencia)</span></div>
+            <div class="kpi-val" id="f-runway">—</div>
+            <div class="kpi-foot"><span class="kpi-sub">Meses cubiertos con liquidez</span></div>
+        </div>
 
-                        <div class="card-sep"></div>
+        <div class="fi-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="kpi-label"><span>Balance Últ. Mes</span></div>
+            <div class="kpi-val" id="f-last-balance">—</div>
+            <div class="kpi-foot"><span class="kpi-sub">Ing: <span id="f-last-inc">—</span> | Gts: <span
+                        id="f-last-exp">—</span></span></div>
+        </div>
+    </div>
 
-                        <!-- AI insight -->
-                        <div class="card-head" style="margin-bottom:8px">
-                            <div class="card-title">
-                                Análisis IA
-                                <div class="tip-wrap">
-                                    <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Insights generados automáticamente analizando tus patrones
-                                        de gasto, tasa de ahorro y tendencias.</div>
-                                </div>
-                            </div>
-                            <span class="ai-badge">✦ IA</span>
-                        </div>
-                        <div id="finance-insights-list"></div>
-                    </div>
+    <div class="card"
+        style="margin-bottom: 24px; border: 1px solid rgba(37,99,235,0.2); background: linear-gradient(to bottom right, rgba(37,99,235,0.02), transparent);">
+        <div class="card-head" style="margin-bottom:16px">
+            <div class="card-title" style="color: var(--accent);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                Auditoría IA & Presupuesto Base
+            </div>
+            <span class="ai-badge">Automático</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px; align-items: center;">
+            <div id="rule-503020-container" style="border-right: 1px solid var(--border); padding-right: 24px;"></div>
+            <div id="finance-insights-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+    </div>
 
-                    <div class="card">
-                        <div class="card-head">
-                            <div class="card-title">
-                                Flujo de Caja Mensual
-                                <div class="tip-wrap">
-                                    <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Comparativa mensual entre ingresos (verde) y gastos (rojo).
-                                        Los meses donde el rojo supera al verde son meses de déficit.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="height:300px;position:relative"><canvas id="financeChart"></canvas></div>
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-head">
+            <div class="card-title">Evolución Financiera</div>
+            <div class="fin-filter-bar">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <select id="fin-filter-time" class="fin-select" onchange="applyFinanceFilters()">
+                    <option value="ALL">Todo el histórico</option>
+                    <option value="12M">Último Año</option>
+                    <option value="6M" selected>Últimos 6 Meses</option>
+                    <option value="3M">Últimos 3 Meses</option>
+                </select>
+                <div style="width:1px; height:12px; background:var(--border);"></div>
+                <select id="fin-filter-type" class="fin-select" onchange="applyFinanceFilters()">
+                    <option value="ALL">Flujo Completo</option>
+                    <option value="NET">Solo Ahorro Neto</option>
+                    <option value="INC">Solo Ingresos</option>
+                    <option value="EXP">Solo Gastos</option>
+                </select>
+                <div style="width:1px; height:12px; background:var(--border);"></div>
+                <select id="fin-filter-cat" class="fin-select" onchange="applyFinanceFilters()">
+                    <option value="ALL">Todas las Categorías</option>
+                </select>
+            </div>
+        </div>
+        <div style="height:340px;position:relative"><canvas id="financeChart"></canvas></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+        <div class="card" style="border-top: 3px solid var(--crypto);">
+            <div class="card-head" style="margin-bottom: 12px;">
+                <div class="card-title" style="color: var(--crypto);">Suscripciones y Recurrentes</div>
+                <div class="badge" style="background: rgba(124,58,237,0.1); color: var(--crypto);" id="f-sub-total">
+                    0€/mes</div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div class="section-label">Calendario de Cobros</div>
+                <div id="sub-calendar" class="cal-grid"></div>
+            </div>
+
+            <div class="section-label">Gestor de Suscripciones</div>
+            <div id="subs-manual-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+            </div>
+
+            <div class="section-label">Sugerencias IA a Revisar</div>
+            <div id="subs-ai-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="card">
+                <div class="card-head" style="margin-bottom: 12px;">
+                    <div class="card-title">Desglose de Ingresos</div>
+                    <div class="badge" style="background: var(--green-bg); color: var(--green);" id="f-income-total">0€
                     </div>
                 </div>
+                <p style="font-size: 11px; color: var(--text-3); margin-bottom: 12px;">Categorías que más ingresos te
+                    han generado en el periodo temporal seleccionado.</p>
+                <div id="income-breakdown-list"></div>
+            </div>
 
-                <!-- Second row: top categories + subscriptions + forecast -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
-                    <!-- Top Spending -->
-                    <div class="card">
-                        <div class="card-head">
-                            <div class="card-title">
-                                Top Categorías de Gasto
-                                <div class="tip-wrap">
-                                    <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Las categorías donde más has gastado históricamente.
-                                        Identificar las partidas más grandes es el primer paso para optimizar.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="top-cats-list"></div>
-                    </div>
-
-                    <!-- Subscriptions -->
-                    <div class="card">
-                        <div class="card-head">
-                            <div class="card-title">
-                                Suscripciones Detectadas
-                                <div class="tip-wrap">
-                                    <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Pagos recurrentes detectados por IA. Revisa si todos son
-                                        servicios que realmente usas.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="subs-list">
-                            <p style="font-size:12px;color:var(--text-3);text-align:center;padding:20px">Sin datos
-                                suficientes</p>
-                        </div>
-                    </div>
-
-                    <!-- Forecast / Milestones -->
-                    <div class="card">
-                        <div class="card-head">
-                            <div class="card-title">
-                                Proyección e Hitos
-                                <div class="tip-wrap">
-                                    <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Proyección basada en tu tasa de ahorro y rentabilidad media.
-                                        Cuándo podrías alcanzar determinados niveles de patrimonio manteniendo el ritmo
-                                        actual.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="milestones-list"></div>
-                    </div>
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Top Categorías de Gasto</div>
                 </div>
+                <div id="top-cats-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <!-- Saving trend chart -->
-                <div class="card">
-                    <div class="card-head">
-                        <div class="card-title">
-                            Evolución de Ahorro Neto Mensual
-                            <div class="tip-wrap">
-                                <div class="tip-icon">?</div>
-                                <div class="tip-bubble">Balance neto mes a mes (ingresos − gastos). La línea roja
-                                    punteada es tu promedio. Los meses por encima son los que más ahorras.</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="height:200px;position:relative"><canvas id="savingTrendChart"></canvas></div>
+<div class="modal-ov" id="modal-sub-manager">
+    <div class="modal-card" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2 style="font-size:16px;font-weight:700">Configurar Suscripción</h2>
+            <button class="fs-close"
+                onclick="document.getElementById('modal-sub-manager').classList.remove('open')">×</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+            <input type="hidden" id="sub-form-id">
+            <div class="form-group">
+                <label class="form-label">Nombre del servicio</label>
+                <input type="text" id="sub-form-name" class="form-input" placeholder="Netflix, Gimnasio...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Importe (€)</label>
+                <input type="number" id="sub-form-amt" class="form-input" step="0.01">
+            </div>
+            <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div>
+                    <label class="form-label">Periodicidad</label>
+                    <select id="sub-form-freq" class="form-input" style="padding: 10px;">
+                        <option value="mensual">Mensual</option>
+                        <option value="trimestral">Trimestral</option>
+                        <option value="anual">Anual</option>
+                    </select>
                 </div>
-            </div><!-- end page-finanzas -->
+                <div>
+                    <label class="form-label">Día de cobro</label>
+                    <input type="number" id="sub-form-day" class="form-input" min="1" max="31" placeholder="Ej: 15">
+                </div>
+            </div>
+            <button onclick="saveManualSubscription()" class="btn-action btn-primary"
+                style="width: 100%; justify-content: center; margin-top: 10px;">Guardar Suscripción</button>
+        </div>
+    </div>
+</div>

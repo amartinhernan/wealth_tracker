@@ -1,7 +1,54 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.firebase_utils import db_fs, get_user_subcollection
 from .pricing import fetch_stock_price, fetch_crypto_price, fetch_crypto_price_batch, get_conversion_to_eur
 from .indexa import fetch_indexa_data
+
+BACKFILL_FROM = '2026-04-01'  # Only backfill from this date onwards — older data was deleted deliberately
+
+def _backfill_indexa_month_ends(uid, asset_name, portfolio, daily_values, daily_invested):
+    """
+    Creates one Firestore snapshot per calendar month (last day with data) using
+    Indexa's own daily history.  Skips months that already have a snapshot and
+    skips any date before BACKFILL_FROM to avoid recreating deleted historical data.
+    daily_values  : {YYYYMMDD: portfolio_value}
+    daily_invested: {YYYYMMDD: cumulative_invested}
+    """
+    assets_col = get_user_subcollection(uid, 'assets')
+
+    # Find the last trading day of each month
+    month_last = {}
+    for date_key in sorted(daily_values.keys()):
+        if len(date_key) == 8 and date_key.isdigit():
+            month_last[date_key[:6]] = date_key  # keeps overwriting → last day wins
+
+    for ym, date_key in month_last.items():
+        date_str = f"{date_key[:4]}-{date_key[4:6]}-{date_key[6:8]}"
+        if date_str < BACKFILL_FROM:
+            continue  # skip pre-April data that was intentionally deleted
+        doc_id   = f"{date_str}_{asset_name}"
+
+        if assets_col.document(doc_id).get().exists:
+            continue  # already have this snapshot
+
+        val  = float(daily_values.get(date_key) or 0.0)
+        inv  = float(daily_invested.get(date_key) or 0.0)
+        prof = val - inv
+        prof_pct = (prof / inv * 100) if inv > 0 else 0.0
+
+        assets_col.document(doc_id).set({
+            'date': date_str,
+            'asset_name': asset_name,
+            'portfolio': portfolio,
+            'actual_price': 1.0,
+            'actual_holdings': val,
+            'avg_buy_price': 0.0,
+            'total_invest_money': inv,
+            'actual_money': val,
+            'profit_loss': prof,
+            'profit_loss_pct': prof_pct
+        })
+        print(f"DEBUG: Backfilled Indexa snapshot {date_str} val={val:.2f} inv={inv:.2f}")
+
 
 def sync_managed_assets(uid):
     """Sincroniza activos desde Firestore para un usuario específico."""
@@ -52,17 +99,59 @@ def sync_managed_assets(uid):
         if subtype == 'cash':
             actual_price_eur = 1.0
             actual_money = holdings
+            max_processed_date = None
             if c.get('type') == 'auto' and c.get('ticker'):
                 tx_col = get_user_subcollection(uid, 'transactions')
                 txs = tx_col.where('source', '==', c.get('ticker')).get()
                 tx_sum = 0.0
-                updated_at = c.get('updated_at')
-                # updated_at puede ser un datetime o un timestamp de Firestore
+
+                # PRIMARY cutoff: exact datetime when user last set a manual balance.
+                # We compare tx.created_at (when the transaction was inventoried/imported)
+                # against this timestamp — NOT the transaction date. This means:
+                #   - A May-5 transaction imported on May 10 (after the anchor) → included ✓
+                #   - A May-5 transaction imported on May 8 (before the anchor) → excluded ✓
+                cutoff_dt = c.get('manual_balance_datetime')  # timezone-aware datetime or None
+                # Ensure cutoff_dt is timezone-aware for safe comparison
+                if cutoff_dt is not None and hasattr(cutoff_dt, 'tzinfo') and cutoff_dt.tzinfo is None:
+                    cutoff_dt = cutoff_dt.replace(tzinfo=timezone.utc)
+
+                # No coger transacciones que sean 'padres' (grupos)
+                parent_ids = {doc.to_dict().get('linked_transaction_id') for doc in txs if doc.to_dict().get('linked_transaction_id')}
+
                 for tx_doc in txs:
+                    if tx_doc.id in parent_ids:
+                        continue  # Ignorar grupos (padres), tomar solo transacciones individuales
+
                     tx = tx_doc.to_dict()
-                    if not updated_at or (tx.get('date') and tx['date'] > updated_at):
+                    tx_created_at = tx.get('created_at')  # datetime: when inventoried
+
+                    if tx_created_at is not None:
+                        # Ensure tz-aware for comparison
+                        if hasattr(tx_created_at, 'tzinfo') and tx_created_at.tzinfo is None:
+                            tx_created_at = tx_created_at.replace(tzinfo=timezone.utc)
+                        include = (cutoff_dt is None) or (tx_created_at > cutoff_dt)
+                    else:
+                        # Legacy fallback for transactions without created_at:
+                        # compare using the transaction date string (old behavior).
+                        raw_date = tx.get('date')
+                        if isinstance(raw_date, str):
+                            tx_date_str = raw_date[:10]
+                        elif hasattr(raw_date, 'date'):
+                            tx_date_str = raw_date.date().isoformat()
+                        else:
+                            tx_date_str = None
+                        cutoff_date_str = c.get('manual_balance_date')
+                        include = not cutoff_date_str or (tx_date_str and tx_date_str > cutoff_date_str)
+
+                    if include:
                         tx_sum += tx.get('amount', 0)
+                        if tx_created_at and (not max_processed_date or tx_created_at > max_processed_date):
+                            max_processed_date = tx_created_at
+
                 actual_money = holdings + tx_sum
+                # After processing, store the sync time as the new cutoff.
+                # Next sync will only include transactions inventoried AFTER this moment.
+                c['new_cutoff_dt'] = datetime.now(timezone.utc)
             
         # 2. INDEXA
         elif subtype == 'indexa':
@@ -104,6 +193,12 @@ def sync_managed_assets(uid):
                         invested_total = a_data.get('total_invested', invested_total)
                         twr = a_data.get('twr', 0.0)
                         mwr = a_data.get('mwr', 0.0)
+                        # Backfill month-end snapshots from Indexa daily history
+                        _backfill_indexa_month_ends(
+                            uid, name, c.get('portfolio'),
+                            a_data.get('daily_values', {}),
+                            a_data.get('daily_invested', {})
+                        )
                     else:
                         # 4. Final resort: aggregate data (legacy behavior)
                         actual_money = d.get('actual_money', holdings)
@@ -164,6 +259,24 @@ def sync_managed_assets(uid):
             'profit_loss_pct': profit_loss_pct
         }
         asset_ref.set(asset_data)
+        
+        # Persist updated balance and advance the cutoff to the current sync time.
+        # Next sync will only include transactions inventoried AFTER this moment.
+        if subtype == 'cash' and c.get('type') == 'auto':
+            try:
+                configs_ref = get_user_subcollection(uid, 'asset_configs')
+                sync_time = c.get('new_cutoff_dt') or datetime.now(timezone.utc)
+                update_payload = {
+                    'holdings': actual_money,
+                    'updated_at': sync_time,
+                    'manual_balance_datetime': sync_time,   # primary cutoff (with time)
+                    'manual_balance_date': sync_time.strftime('%Y-%m-%d'),  # legacy fallback
+                }
+                print(f"DEBUG: Cash sync done for {name}: balance={actual_money:.2f}, cutoff advanced to {sync_time.isoformat()}")
+                configs_ref.document(name).update(update_payload)
+            except Exception as e:
+                print(f"Error updating config for {name}: {e}")
+
         results.append({"name": name, "value": actual_money})
 
     return {"status": "success", "synced": results}

@@ -93,6 +93,12 @@ def fetch_indexa_data():
             total_profit += prof
             processed_count += 1
             
+            # Daily history for month-end snapshot backfill
+            # return.total_amounts = {YYYYMMDD: portfolio_value}
+            # net_amounts (top-level) = {YYYYMMDD: cumulative_invested}
+            daily_vals = perf_data.get('return', {}).get('total_amounts', {})
+            daily_inv  = perf_data.get('net_amounts', {})
+
             # Save per-account details for granular mapping
             account_details[acc_num] = {
                 "actual_money": amt,
@@ -100,7 +106,9 @@ def fetch_indexa_data():
                 "profit_loss": prof,
                 "twr": twr,
                 "mwr": mwr,
-                "risk": acc.get('risk')
+                "risk": acc.get('risk'),
+                "daily_values": daily_vals,    # YYYYMMDD -> portfolio value
+                "daily_invested": daily_inv    # YYYYMMDD -> cumulative invested
             }
 
             if amt > max_amount:

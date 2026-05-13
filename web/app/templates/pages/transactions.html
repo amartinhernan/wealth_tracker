@@ -6,15 +6,25 @@
                     </div>
                     <div style="display:flex;gap:10px;align-items:center">
                         <button class="btn-action" onclick="openCategoryModal()">Gestionar Categorías</button>
-                        <select id="import-source" class="btn-action" style="cursor:pointer;min-width:160px">
-                            <option value="SANTANDER">Santander (Excel)</option>
-                            <option value="REVOLUT">Revolut (CSV)</option>
-                            <option value="EDENRED">Edenred (Excel)</option>
-                        </select>
+
+                        <!-- Custom bank picker -->
+                        <div class="bank-picker" id="bank-picker">
+                            <button class="bank-picker-btn" id="bank-picker-btn" type="button" onclick="toggleBankPicker(event)">
+                                <span id="bank-picker-logo" style="line-height:0;flex-shrink:0;"></span>
+                                <span id="bank-picker-label" style="flex:1;text-align:left;white-space:nowrap;"></span>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.5;"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <div class="bank-picker-menu" id="bank-picker-menu"></div>
+                        </div>
+                        <input type="hidden" id="import-source" value="SANTANDER">
+
                         <input type="file" id="import-file" style="display:none" onchange="handleFileUpload(this)">
+                        <button class="btn-action" onclick="openManualTxModal()" style="display:flex;align-items:center;gap:5px;">
+                            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Añadir
+                        </button>
                         <button class="btn-action btn-primary" onclick="document.getElementById('import-file').click()">
-                            <svg viewBox="0 0 24 24"
-                                style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2">
+                            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                             </svg>
                             Importar
@@ -24,40 +34,68 @@
 
                 <!-- Toolbar -->
                 <div class="tx-toolbar">
+                    <!-- Search — always visible -->
                     <div class="tx-search-wrap" style="flex:1; min-width: 180px;">
                         <svg class="tx-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8" />
                             <path d="m21 21-4.3-4.3" />
                         </svg>
-                        <input type="text" id="tx-search" placeholder="Buscar palabra clave..."
+                        <input type="text" id="tx-search" placeholder="Buscar..."
                             oninput="debouncedRenderTransactions()">
                     </div>
-                    
-                    <input type="text" id="filter-col-cat" class="tx-select" placeholder="Categoría (ej: Comida)" oninput="debouncedRenderTransactions()" style="width: 160px;">
-                    
-                    <select id="filter-col-source" class="tx-select" onchange="debouncedRenderTransactions()">
-                        <option value="">Todas las cuentas</option>
-                        <option value="SANTANDER">Santander</option>
-                        <option value="REVOLUT">Revolut</option>
-                        <option value="EDENRED">Edenred</option>
-                    </select>
-                    
-                    <input type="month" id="filter-col-date" class="tx-select" onchange="debouncedRenderTransactions()" style="width: 130px; cursor: pointer;">
-                    
-                    <input type="number" id="filter-col-amount" class="tx-select" placeholder="Cantidad €" oninput="debouncedRenderTransactions()" style="width: 110px;">
 
+                    <!-- Tipo: always visible -->
                     <select id="filter-type" class="tx-select" onchange="renderTransactionsTable()">
                         <option value="ALL">Todo (+/-)</option>
-                        <option value="INC">Solo Ingresos</option>
-                        <option value="EXP">Solo Gastos</option>
+                        <option value="INC">Ingresos</option>
+                        <option value="EXP">Gastos</option>
                     </select>
-                    
-                    <select id="filter-status" class="tx-select" onchange="renderTransactionsTable()">
-                        <option value="ALL">Estados: Todos</option>
-                        <option value="PENDING">Pendientes</option>
-                        <option value="REVIEWED">Revisados</option>
-                    </select>
+
+                    <!-- Toggle button: only shown on mobile -->
+                    <button class="btn-filters-toggle" id="btn-filters-toggle" onclick="toggleMobileFilters()">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        Filtros
+                        <span class="filter-badge" id="filter-badge" style="display:none">0</span>
+                    </button>
+
+                    <!-- Extra filters: display:contents on desktop, collapsible panel on mobile -->
+                    <div id="tx-extra-filters">
+                        <input type="text" id="filter-col-cat" class="tx-select" placeholder="Categoría" oninput="debouncedRenderTransactions()" style="width:150px;">
+
+                        <select id="filter-col-source" class="tx-select" onchange="debouncedRenderTransactions()">
+                            <option value="">Todas las cuentas</option>
+                            <option value="SANTANDER">Santander</option>
+                            <option value="BBVA">BBVA</option>
+                            <option value="CAIXABANK">CaixaBank</option>
+                            <option value="SABADELL">Sabadell</option>
+                            <option value="ING">ING</option>
+                            <option value="BANKINTER">Bankinter</option>
+                            <option value="OPENBANK">Openbank</option>
+                            <option value="ABANCA">Abanca</option>
+                            <option value="KUTXABANK">Kutxabank</option>
+                            <option value="UNICAJA">Unicaja</option>
+                            <option value="IBERCAJA">Ibercaja</option>
+                            <option value="CAJAMAR">Cajamar</option>
+                            <option value="EVOBANK">EVO Banco</option>
+                            <option value="TRADEREPUBLIC">Trade Republic</option>
+                            <option value="MYINVESTOR">MyInvestor</option>
+                            <option value="REVOLUT">Revolut</option>
+                            <option value="N26">N26</option>
+                            <option value="WISE">Wise</option>
+                            <option value="EDENRED">Edenred</option>
+                        </select>
+
+                        <input type="month" id="filter-col-date" class="tx-select" onchange="debouncedRenderTransactions()" style="cursor:pointer;">
+
+                        <input type="number" id="filter-col-amount" class="tx-select" placeholder="Importe €" oninput="debouncedRenderTransactions()">
+
+                        <select id="filter-status" class="tx-select" onchange="renderTransactionsTable()">
+                            <option value="ALL">Estado: Todos</option>
+                            <option value="PENDING">Pendientes</option>
+                            <option value="REVIEWED">Revisados</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="tx-count" id="tx-count"></div>
@@ -84,3 +122,82 @@
                     </div>
                 </div>
             </div><!-- end page-transactions -->
+
+<!-- ══ MODAL: AÑADIR TRANSACCIÓN MANUAL ══ -->
+<div class="modal-ov" id="modal-manual-tx">
+    <div class="modal-card" style="max-width:460px;">
+        <div class="modal-header">
+            <h2 style="font-size:16px;font-weight:700;">Añadir Transacción Manual</h2>
+            <button class="btn-action" onclick="closeManualTxModal()" style="width:32px;height:32px;justify-content:center;font-size:18px;flex-shrink:0;">×</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+
+            <!-- Type toggle -->
+            <div style="display:flex;gap:6px;margin-bottom:18px;background:var(--bg2);border-radius:10px;padding:4px;">
+                <button id="manual-type-exp" onclick="setManualTxType('EXP')"
+                    style="flex:1;padding:8px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;background:var(--red);color:#fff;">
+                    Gasto
+                </button>
+                <button id="manual-type-inc" onclick="setManualTxType('INC')"
+                    style="flex:1;padding:8px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;background:transparent;color:var(--text-3);">
+                    Ingreso
+                </button>
+            </div>
+            <input type="hidden" id="manual-tx-type" value="EXP">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="form-group">
+                    <label class="form-label">Importe (€)</label>
+                    <input type="number" id="manual-tx-amount" class="form-input" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" id="manual-tx-date" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                <input type="text" id="manual-tx-desc" class="form-input" placeholder="Mercadona, Gasolina, Bizum...">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="form-group">
+                    <label class="form-label">Cuenta / Origen</label>
+                    <select id="manual-tx-source" class="form-input" style="padding:10px;">
+                        <option value="CASH">💵 Efectivo</option>
+                        <option value="SANTANDER">Santander</option>
+                        <option value="BBVA">BBVA</option>
+                        <option value="CAIXABANK">CaixaBank</option>
+                        <option value="SABADELL">Sabadell</option>
+                        <option value="ING">ING</option>
+                        <option value="BANKINTER">Bankinter</option>
+                        <option value="OPENBANK">Openbank</option>
+                        <option value="ABANCA">Abanca</option>
+                        <option value="KUTXABANK">Kutxabank</option>
+                        <option value="UNICAJA">Unicaja</option>
+                        <option value="IBERCAJA">Ibercaja</option>
+                        <option value="CAJAMAR">Cajamar</option>
+                        <option value="EVOBANK">EVO Banco</option>
+                        <option value="TRADEREPUBLIC">Trade Republic</option>
+                        <option value="MYINVESTOR">MyInvestor</option>
+                        <option value="REVOLUT">Revolut</option>
+                        <option value="N26">N26</option>
+                        <option value="WISE">Wise</option>
+                        <option value="EDENRED">Edenred</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoría (opcional)</label>
+                    <select id="manual-tx-cat" class="form-input" style="padding:10px;">
+                        <option value="">Sin categoría</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="saveManualTx()" class="btn-action btn-primary" style="width:100%;justify-content:center;margin-top:8px;padding:12px;">
+                Guardar Transacción
+            </button>
+        </div>
+    </div>
+</div>

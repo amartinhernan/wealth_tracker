@@ -1,133 +1,441 @@
 <!-- ════════════════════ FREEDOM MULTIVERSE ════════════════════ -->
+<style>
+    /* ── FIRE KPI strip ── */
+    .fire-kpi-strip {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 16px; margin-bottom: 24px;
+    }
+    .fire-kpi {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--r); padding: 20px 24px;
+        position: relative; overflow: hidden;
+        transition: box-shadow 0.2s;
+    }
+    .fire-kpi:hover { box-shadow: var(--shadow-md); }
+    .fire-kpi-accent { border-color: rgba(37,99,235,0.25); background: linear-gradient(135deg, rgba(37,99,235,0.04), var(--surface)); }
+    .fire-kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); margin-bottom: 8px; }
+    .fire-kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -1px; line-height: 1; }
+    .fire-kpi-val.accent { color: var(--accent); }
+    .fire-kpi-val.green { color: var(--green); }
+    .fire-kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+    .fire-kpi-prog { height: 4px; background: var(--bg2); border-radius: 100px; margin-top: 12px; overflow: hidden; }
+    .fire-kpi-prog-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), #22C55E); transition: width 0.8s ease; }
 
-            <div id="page-retirement" style="display:none">
-                <div class="page-head">
+    /* ── Config grid ── */
+    .config-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+    @media (max-width: 900px) { .config-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* ── Strategy layout ── */
+    .strategy-layout {
+        display: grid; grid-template-columns: 1fr 340px;
+        gap: 24px; align-items: start;
+    }
+    @media (max-width: 1100px) { .strategy-layout { grid-template-columns: 1fr; } }
+
+    /* ── Verse cards ── */
+    .verse-grid { display: flex; flex-direction: column; gap: 12px; }
+
+    .verse-card {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: 14px; padding: 18px 20px;
+        cursor: pointer; position: relative; overflow: hidden;
+        transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .verse-card:hover { border-color: rgba(37,99,235,0.3); transform: translateX(3px); box-shadow: var(--shadow-md); }
+    .verse-card.active {
+        border-color: var(--accent);
+        background: linear-gradient(135deg, rgba(37,99,235,0.05), var(--surface));
+        box-shadow: 0 4px 24px rgba(37,99,235,0.12);
+    }
+    .verse-card.active::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+        width: 3px; background: var(--accent); border-radius: 0 2px 2px 0;
+    }
+
+    .verse-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .verse-icon-box {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; flex-shrink: 0;
+        background: var(--bg);
+        transition: background 0.2s;
+    }
+    .verse-card.active .verse-icon-box { background: rgba(37,99,235,0.1); }
+    .verse-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .verse-desc { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+
+    .verse-metrics {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 8px; margin-top: 12px;
+    }
+    .verse-metric { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+    .verse-metric-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--text); }
+    .verse-metric-val.green { color: var(--green); }
+    .verse-metric-val.red { color: var(--red); }
+    .verse-metric-val.accent { color: var(--accent); }
+    .verse-metric-lbl { font-size: 9px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    .verse-progress-wrap { margin-top: 10px; }
+    .verse-prog-track { height: 5px; background: var(--bg2); border-radius: 100px; overflow: hidden; }
+    .verse-prog-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), #22C55E); transition: width 0.8s ease; }
+    .verse-prog-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-3); font-weight: 600; margin-top: 4px; }
+
+    /* Nomad tiers */
+    .nomad-tier { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .nomad-tier:last-child { border-bottom: none; }
+    .tier-label { font-size: 11px; font-weight: 500; color: var(--text-2); }
+    .tier-locked { font-size: 11px; font-weight: 700; color: var(--red); font-family: 'JetBrains Mono', monospace; }
+    .tier-unlocked { font-size: 11px; font-weight: 700; color: var(--green); }
+
+    /* Insight banner */
+    .multiverse-insight-banner {
+        background: var(--bg); border: 1px solid var(--border);
+        border-radius: 10px; padding: 12px 16px;
+        font-size: 12px; color: var(--text-2); line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    /* Hitos */
+    .hito-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .hito-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
+        border-radius: 9px;
+    }
+    .hito-info { display: flex; align-items: center; gap: 10px; }
+    .hito-icon { font-size: 16px; }
+    .hito-name { font-size: 12.5px; font-weight: 600; }
+    .hito-date { font-size: 10px; color: var(--text-3); }
+    .hito-remove { width: 22px; height: 22px; border-radius: 6px; background: none; border: 1px solid var(--border); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-3); transition: all 0.15s; }
+    .hito-remove:hover { background: rgba(220,38,38,0.08); border-color: var(--red); color: var(--red); }
+    .hito-form { display: grid; grid-template-columns: 2fr 1fr 1fr auto auto; gap: 8px; align-items: center; }
+    @media (max-width: 900px) { .hito-form { grid-template-columns: 1fr 1fr; } }
+
+    .magic-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; opacity: 0.6; transition: opacity 0.2s; }
+    .magic-btn:hover { opacity: 1; }
+
+    /* Chart insight */
+    #multiverse-insight { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── Mobile overrides ── */
+    @media (max-width: 768px) {
+        /* FIRE KPI strip: 2x2 grid */
+        .fire-kpi-strip {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px;
+        }
+        .fire-kpi { padding: 14px 14px; }
+        .fire-kpi-val { font-size: 20px; }
+        .fire-kpi-label { font-size: 10px; }
+        .fire-kpi-sub { font-size: 10px; margin-top: 4px; }
+
+        /* Config grid: 2 columns */
+        .config-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0 12px;
+        }
+        /* Config action buttons wrap */
+        #page-retirement .card-head .btn-action { font-size: 10px; padding: 5px 8px; }
+        #page-retirement .card-head > div { flex-wrap: wrap; gap: 6px; }
+
+        /* Strategy layout: single column */
+        .strategy-layout {
+            grid-template-columns: 1fr !important;
+            gap: 12px;
+        }
+
+        /* Verse cards compact */
+        .verse-card { padding: 14px; }
+        .verse-card:hover { transform: none; }
+        .verse-header { gap: 8px; }
+        .verse-icon-box { width: 30px; height: 30px; font-size: 14px; }
+        .verse-title { font-size: 12.5px; }
+        .verse-desc { font-size: 10.5px; }
+        .verse-metrics { gap: 6px; }
+        .verse-metric { padding: 6px 8px; }
+        .verse-metric-val { font-size: 13px; }
+        .verse-metric-lbl { font-size: 8.5px; }
+        .verse-prog-labels { font-size: 8.5px; }
+        .nomad-tier { flex-wrap: wrap; gap: 4px; }
+        .tier-label { font-size: 10px; }
+        .tier-locked, .tier-unlocked { font-size: 10px; }
+
+        /* Hitos form: stacked layout */
+        .hito-form {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px;
+        }
+        #h-name { grid-column: 1 / -1; }
+        .hito-form > button { grid-column: 1 / -1; }
+
+        /* Chart height */
+        .chart-wrap { height: 220px !important; }
+
+        /* Insight banner compact */
+        .multiverse-insight-banner { padding: 8px 10px; font-size: 11px; }
+        #multiverse-insight { font-size: 11px; }
+
+        /* Verse cards first on mobile (select scenario first, then see chart) */
+        .strategy-layout { display: flex !important; flex-direction: column; }
+        .strategy-layout > div:nth-child(2) { order: -1; } /* verse-grid wrapper goes first */
+
+        /* Hitos list items */
+        .hito-item { padding: 8px 10px; }
+        .hito-name { font-size: 12px; }
+        .hito-date { font-size: 9.5px; }
+    }
+</style>
+
+<div id="page-retirement" style="display:none">
+    <div class="page-head">
+        <div>
+            <h1 class="page-title">Estrategia ✦</h1>
+            <p class="page-sub">Escenarios de vida basados en tu patrimonio actual y capacidad de ahorro</p>
+        </div>
+    </div>
+
+    <!-- FIRE KPI Strip -->
+    <div class="fire-kpi-strip">
+        <div class="fire-kpi fire-kpi-accent">
+            <div class="fire-kpi-label">🎯 Número FIRE</div>
+            <div class="fire-kpi-val accent" id="fire-number-val">—</div>
+            <div class="fire-kpi-sub">25× tus gastos anuales (SWR 4%)</div>
+            <div class="fire-kpi-prog"><div class="fire-kpi-prog-fill" id="fire-kpi-bar" style="width:0%"></div></div>
+        </div>
+        <div class="fire-kpi">
+            <div class="fire-kpi-label">📅 Año FIRE</div>
+            <div class="fire-kpi-val" id="fire-year-val">—</div>
+            <div class="fire-kpi-sub" id="fire-years-left-lbl">Con tu ritmo actual de ahorro</div>
+        </div>
+        <div class="fire-kpi">
+            <div class="fire-kpi-label">💸 SWR Mensual</div>
+            <div class="fire-kpi-val green" id="fire-swr-val">—</div>
+            <div class="fire-kpi-sub">Retiro seguro al 4% anual hoy</div>
+        </div>
+        <div class="fire-kpi">
+            <div class="fire-kpi-label">🛡️ Runway</div>
+            <div class="fire-kpi-val" id="fire-runway-top">—</div>
+            <div class="fire-kpi-sub">Meses sin ingresos</div>
+        </div>
+    </div>
+
+    <!-- Configurador Global -->
+    <div class="card" style="padding:20px 24px; margin-bottom:24px;">
+        <div class="card-head" style="margin-bottom:14px;">
+            <div class="card-title">Parámetros de Proyección</div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn-action" onclick="fillFinancials('income')" style="font-size:11px;padding:5px 10px;gap:4px;">
+                    🪄 Auto-ingresos
+                </button>
+                <button class="btn-action" onclick="fillFinancials('expense')" style="font-size:11px;padding:5px 10px;gap:4px;">
+                    🪄 Auto-gastos
+                </button>
+                <button class="btn-action" onclick="fillHistory('roi')" style="font-size:11px;padding:5px 10px;gap:4px;">
+                    🪄 ROI histórico
+                </button>
+            </div>
+        </div>
+        <div class="config-grid">
+            <div class="form-group">
+                <label class="form-label">Ingreso Mensual (€)</label>
+                <input type="number" id="m-income" class="form-input" value="2400" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subida Salarial Anual (%)</label>
+                <input type="number" id="m-inc-growth" class="form-input" value="3" step="0.5" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Gasto Mensual (€)</label>
+                <input type="number" id="m-spend" class="form-input" value="1800" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Inflación/Vida Anual (%)</label>
+                <input type="number" id="m-exp-growth" class="form-input" value="2.5" step="0.5" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ROI Inversiones (%)</label>
+                <input type="number" id="m-roi" class="form-input" value="7" step="0.5" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">% Ahorro Invertido <span title="¿Qué % del ahorro mensual se invierte con ROI?" style="cursor:help;opacity:0.6">ⓘ</span></label>
+                <input type="number" id="m-invest-rate" class="form-input" value="80" min="0" max="100" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Aportación Extra Mensual (€)</label>
+                <input type="number" id="m-save" class="form-input" value="0" oninput="updateMultiverse()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Horizonte de Proyección (Años)</label>
+                <input type="number" id="m-years" class="form-input" value="30" oninput="updateMultiverse()">
+            </div>
+        </div>
+    </div>
+
+    <div class="strategy-layout">
+        <!-- Left: Chart + Hitos -->
+        <div style="display:flex;flex-direction:column;gap:24px;">
+            <!-- Chart -->
+            <div class="card" style="padding:24px;">
+                <div class="card-head" style="margin-bottom:16px;">
+                    <div class="card-title">Proyección de Patrimonio</div>
+                    <div class="multiverse-insight-banner" style="margin:0;padding:8px 12px;font-size:11px;" id="multiverse-insight">
+                        Selecciona un escenario para ver el análisis.
+                    </div>
+                </div>
+                <div class="chart-wrap" style="height:460px;position:relative">
+                    <canvas id="multiverseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Hitos -->
+            <div class="card" style="padding:24px;">
+                <div class="card-head" style="margin-bottom:12px;">
+                    <div class="card-title">Hitos y Gastos Extraordinarios</div>
+                </div>
+                <p style="font-size:12px;color:var(--text-3);margin-bottom:16px;">
+                    Bodas, entrada de piso, viajes. Impactan directamente en tu interés compuesto.
+                </p>
+                <div id="hito-list" class="hito-list"></div>
+                <div class="hito-form">
+                    <input type="text" id="h-name" class="form-input" placeholder="Descripción...">
+                    <input type="number" id="h-val" class="form-input" placeholder="Importe (€)">
+                    <input type="month" id="h-date" class="form-input">
+                    <div style="display:flex;align-items:center;gap:6px;padding:0 4px;">
+                        <input type="checkbox" id="h-recurring" style="cursor:pointer;">
+                        <label for="h-recurring" style="font-size:11px;cursor:pointer;white-space:nowrap;">Recurrente</label>
+                    </div>
+                    <button class="btn-action btn-primary" onclick="addHito()" style="padding:0 14px;white-space:nowrap;">+ Añadir</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Scenario Cards -->
+        <div class="verse-grid">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;padding-left:4px;margin-bottom:2px;">Escenarios Estratégicos</div>
+
+            <!-- 🎯 FIRE — Independence -->
+            <div class="verse-card active" onclick="selectVerse('fire')" id="v-fire">
+                <div class="verse-header">
+                    <div class="verse-icon-box">🎯</div>
                     <div>
-                        <h1 class="page-title">Estrategia ✦</h1>
-                        <p class="page-sub">Escenarios de vida basados en tu patrimonio actual y capacidad de ahorro</p>
+                        <div class="verse-title">Independencia FIRE</div>
+                        <div class="verse-desc">¿Cuándo alcanzas el 25×? Tu fecha de libertad financiera.</div>
                     </div>
                 </div>
-
-                <!-- Configurador Global -->
-                <div class="card" style="padding:16px 24px; margin-bottom: 24px;">
-                    <div class="config-grid">
-                        <div class="form-group">
-                            <label class="form-label">Ingreso Mensual (€) <button class="magic-btn" onclick="fillFinancials('income')" title="Deducir de mi historial">🪄</button></label>
-                            <input type="number" id="m-income" class="form-input" value="2400" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Subida Salarial Anual (%)</label>
-                            <input type="number" id="m-inc-growth" class="form-input" value="3" step="0.5" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Gasto Mensual (€) <button class="magic-btn" onclick="fillFinancials('expense')" title="Deducir de mi historial">🪄</button></label>
-                            <input type="number" id="m-spend" class="form-input" value="1800" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Inflación/Vida Anual (%)</label>
-                            <input type="number" id="m-exp-growth" class="form-input" value="2.5" step="0.5" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">ROI Inversiones (%)</label>
-                            <input type="number" id="m-roi" class="form-input" value="7" step="0.5" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">% Ahorro Invertido <span title="¿Qué porcentaje del ahorro mensual vas a invertir en activos con ROI?" style="cursor:help;opacity:0.6">ⓘ</span></label>
-                            <input type="number" id="m-invest-rate" class="form-input" value="80" min="0" max="100" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Aportación Extra (€)</label>
-                            <input type="number" id="m-save" class="form-input" value="0" oninput="updateMultiverse()">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Horizonte (Años)</label>
-                            <input type="number" id="m-years" class="form-input" value="20" oninput="updateMultiverse()">
-                        </div>
+                <div class="verse-metrics">
+                    <div class="verse-metric">
+                        <div class="verse-metric-val accent" id="stat-fire-years">—</div>
+                        <div class="verse-metric-lbl">Años restantes</div>
+                    </div>
+                    <div class="verse-metric">
+                        <div class="verse-metric-val" id="stat-fire-pct">0%</div>
+                        <div class="verse-metric-lbl">Completado</div>
                     </div>
                 </div>
-
-                <div class="strategy-layout">
-                    <!-- Left: Large Projection Chart -->
-                    <div style="display: flex; flex-direction: column; gap: 24px;">
-                        <div class="card" style="padding: 24px;">
-                            <div class="card-head" style="margin-bottom: 20px;">
-                                <div class="card-title">Proyección de Patrimonio</div>
-                            </div>
-                            <div style="height:500px; position:relative">
-                                <canvas id="multiverseChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- ─────── HITOS DE VIDA ─────── -->
-                        <div class="card" style="padding:24px">
-                            <div class="card-head" style="margin-bottom:12px">
-                                <div class="card-title">Hitos y Gastos Extraordinarios</div>
-                            </div>
-                            <p style="font-size:12px; color:var(--text-3); margin-bottom:16px">
-                                Bodas, entradas de piso o viajes. Estos hitos impactan directamente en tu interés compuesto.
-                            </p>
-                            
-                            <div id="hito-list" class="hito-list">
-                                <!-- JS items -->
-                            </div>
-
-                            <div class="hito-form">
-                                <input type="text" id="h-name" class="form-input" placeholder="Descripción...">
-                                <input type="number" id="h-val" class="form-input" placeholder="Importe (€)">
-                                <input type="month" id="h-date" class="form-input">
-                                <div style="display:flex; align-items:center; gap:8px; padding:0 8px">
-                                    <input type="checkbox" id="h-recurring" style="cursor:pointer">
-                                    <label for="h-recurring" style="font-size:12px;cursor:pointer">Recurrente</label>
-                                </div>
-                                <button class="btn-primary" onclick="addHito()" style="padding:0 16px">Añadir</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Compact Scenarios Sidebar -->
-                    <div class="verse-grid">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; padding-left: 4px;">Escenarios Estratégicos</div>
-                        
-                        <!-- Scenario 1: Startup -->
-                        <div class="verse-card active" onclick="selectVerse('startup')" id="v-startup">
-                            <div class="quantum-orb"></div>
-                            <div class="verse-icon">🚀</div>
-                            <div class="verse-title">Runway / Survival</div>
-                            <div class="verse-desc">¿Cuánto tiempo aguantarías si hoy dejas de ingresar?</div>
-                            <div class="verse-stat" id="stat-runway">--</div>
-                            <div class="verse-label">Meses de supervivencia</div>
-                            <div class="runway-progress"><div class="runway-fill" id="runway-bar" style="width:0%"></div></div>
-                        </div>
-
-                        <!-- Scenario 2: Nomad -->
-                        <div class="verse-card" onclick="selectVerse('nomad')" id="v-nomad">
-                            <div class="verse-icon">🌍</div>
-                            <div class="verse-title">Nómada Digital (SWR)</div>
-                            <div class="verse-desc">Libertad teórica basada en la regla del 4% (SWR).</div>
-                            <div id="nomad-tiers">
-                                <div class="nomad-tier"><span class="tier-label">Sudeste Asiático</span><span id="tier-sea" class="tier-locked">Locked</span></div>
-                                <div class="nomad-tier"><span class="tier-label">Europa Este</span><span id="tier-ee" class="tier-locked">Locked</span></div>
-                                <div class="nomad-tier"><span class="tier-label">España / Portugal</span><span id="tier-es" class="tier-locked">Locked</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Scenario 3: Gap Year -->
-                        <div class="verse-card" onclick="selectVerse('gap')" id="v-gap">
-                            <div class="verse-icon">⌛</div>
-                            <div class="verse-title">El Año Sabático</div>
-                            <div class="verse-desc">Impacto de parar hoy 12 meses en tu yo del futuro.</div>
-                            <div class="verse-stat" id="stat-gap-cost">--</div>
-                            <div class="verse-label">Costo de oportunidad</div>
-                        </div>
-
-                        <!-- Scenario 4: Compounder -->
-                        <div class="verse-card" onclick="selectVerse('compound')" id="v-compound">
-                            <div class="verse-icon">🌱</div>
-                            <div class="verse-title">The Compounder</div>
-                            <div class="verse-desc">Tu patrimonio futuro si nunca más vuelves a ahorrar.</div>
-                            <div class="verse-stat" id="stat-comp-final">--</div>
-                            <div class="verse-label">Interés compuesto</div>
-                        </div>
+                <div class="verse-progress-wrap">
+                    <div class="verse-prog-track"><div class="verse-prog-fill" id="fire-prog-bar" style="width:0%"></div></div>
+                    <div class="verse-prog-labels">
+                        <span>Hoy: <span id="stat-fire-now">—</span></span>
+                        <span>Meta: <span id="stat-fire-target">—</span></span>
                     </div>
                 </div>
-            </div><!-- end page-retirement -->
+            </div>
+
+            <!-- 🌍 Nómada Digital -->
+            <div class="verse-card" onclick="selectVerse('nomad')" id="v-nomad">
+                <div class="verse-header">
+                    <div class="verse-icon-box">🌍</div>
+                    <div>
+                        <div class="verse-title">Nómada Digital (SWR)</div>
+                        <div class="verse-desc">¿Qué retiro mensual seguro tienes al 4%? Vive del portfolio.</div>
+                    </div>
+                </div>
+                <div class="verse-metrics">
+                    <div class="verse-metric">
+                        <div class="verse-metric-val green" id="stat-swr-monthly">—</div>
+                        <div class="verse-metric-lbl">SWR Mensual</div>
+                    </div>
+                    <div class="verse-metric">
+                        <div class="verse-metric-val accent" id="stat-swr-future">—</div>
+                        <div class="verse-metric-lbl">En <span id="swr-future-years">20</span>a</div>
+                    </div>
+                </div>
+                <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+                    <div class="nomad-tier"><span class="tier-label">☀️ Sudeste Asiático (1.000€)</span><span id="tier-sea" class="tier-locked">—</span></div>
+                    <div class="nomad-tier"><span class="tier-label">🏰 Europa Este (1.600€)</span><span id="tier-ee" class="tier-locked">—</span></div>
+                    <div class="nomad-tier"><span class="tier-label">🇪🇸 España / Portugal (2.400€)</span><span id="tier-es" class="tier-locked">—</span></div>
+                </div>
+            </div>
+
+            <!-- ⏸️ Año Sabático -->
+            <div class="verse-card" onclick="selectVerse('gap')" id="v-gap">
+                <div class="verse-header">
+                    <div class="verse-icon-box">⏸️</div>
+                    <div>
+                        <div class="verse-title">El Año Sabático</div>
+                        <div class="verse-desc">Impacto real de parar 12 meses en tu patrimonio futuro.</div>
+                    </div>
+                </div>
+                <div class="verse-metrics">
+                    <div class="verse-metric">
+                        <div class="verse-metric-val red" id="stat-gap-cost">—</div>
+                        <div class="verse-metric-lbl">Coste de oportunidad</div>
+                    </div>
+                    <div class="verse-metric">
+                        <div class="verse-metric-val" id="stat-gap-recovery">—</div>
+                        <div class="verse-metric-lbl">Años para recuperar</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🚀 Runway -->
+            <div class="verse-card" onclick="selectVerse('startup')" id="v-startup">
+                <div class="verse-header">
+                    <div class="verse-icon-box">🚀</div>
+                    <div>
+                        <div class="verse-title">Runway / Supervivencia</div>
+                        <div class="verse-desc">¿Cuánto aguantarías si hoy dejas de ingresar?</div>
+                    </div>
+                </div>
+                <div class="verse-metrics">
+                    <div class="verse-metric">
+                        <div class="verse-metric-val" id="stat-runway">—</div>
+                        <div class="verse-metric-lbl">Meses de supervivencia</div>
+                    </div>
+                    <div class="verse-metric">
+                        <div class="verse-metric-val" id="stat-runway-years">—</div>
+                        <div class="verse-metric-lbl">En años</div>
+                    </div>
+                </div>
+                <div class="verse-progress-wrap">
+                    <div class="verse-prog-track"><div class="verse-prog-fill" id="runway-bar" style="width:0%;background:linear-gradient(90deg,var(--accent),#22C55E)"></div></div>
+                    <div class="verse-prog-labels"><span>0</span><span>48 meses ideal</span></div>
+                </div>
+            </div>
+
+            <!-- 🌱 The Compounder -->
+            <div class="verse-card" onclick="selectVerse('compound')" id="v-compound">
+                <div class="verse-header">
+                    <div class="verse-icon-box">🌱</div>
+                    <div>
+                        <div class="verse-title">The Compounder</div>
+                        <div class="verse-desc">Si nunca más ahorras, solo el interés compuesto trabajando.</div>
+                    </div>
+                </div>
+                <div class="verse-metrics">
+                    <div class="verse-metric">
+                        <div class="verse-metric-val green" id="stat-comp-final">—</div>
+                        <div class="verse-metric-lbl">Patrimonio final</div>
+                    </div>
+                    <div class="verse-metric">
+                        <div class="verse-metric-val accent" id="stat-comp-x">—</div>
+                        <div class="verse-metric-lbl">Multiplicador</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

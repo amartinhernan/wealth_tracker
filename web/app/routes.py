@@ -3,6 +3,7 @@ import pandas as pd
 import io
 import os
 from datetime import datetime
+from difflib import SequenceMatcher
 from flask import Blueprint, render_template, jsonify, request
 from app.services.returns import calculate_returns
 from app.services.indexa import fetch_indexa_data
@@ -10,6 +11,7 @@ from app.services.sync import sync_managed_assets
 from app.services.pricing import search_tickers, search_crypto
 from app.services.parsers import BankParser
 from app.services.ai_categorizer import AICategorizer
+from app.services.ai_parser import AIParser
 from app.firebase_utils import token_required, get_user_subcollection, db_fs, firestore_to_dict
 
 main_bp = Blueprint('main', __name__)
@@ -21,6 +23,97 @@ def landing():
 @main_bp.route('/app')
 def index():
     return render_template('index.html')
+
+# ── Bank favicon dominant-edge-color detection ────────────────────────────
+# Fetched once, cached in memory for the lifetime of the process.
+_favicon_color_cache: dict = {}
+_favicon_lock = None
+
+_BANK_FAVICON_DOMAINS = {
+    'SANTANDER':     'santander.com',
+    'BBVA':          'bbva.com',
+    'CAIXABANK':     'caixabank.com',
+    'SABADELL':      'bancosabadell.com',
+    'ING':           'ing.es',
+    'BANKINTER':     'bankinter.com',
+    'OPENBANK':      'openbank.es',
+    'ABANCA':        'abanca.com',
+    'KUTXABANK':     'kutxabank.es',
+    'UNICAJA':       'unicajabanco.es',
+    'IBERCAJA':      'ibercaja.es',
+    'CAJAMAR':       'cajamar.es',
+    'TRADEREPUBLIC': 'traderepublic.com',
+    'MYINVESTOR':    'myinvestor.es',
+    'REVOLUT':       'revolut.com',
+    'N26':           'n26.com',
+    'WISE':          'wise.com',
+    'EDENRED':       'edenred.es',
+}
+
+def _dominant_edge_color(domain: str) -> str:
+    """
+    Fetch the 64×64 favicon for domain and return the dominant color found
+    on the 4 edges (top, bottom, left, right rows/columns).
+    Transparent and near-white pixels are ignored.
+    Returns '#ffffff' if no coloured pixels found.
+    """
+    try:
+        from PIL import Image
+        from collections import Counter
+        url = f'https://www.google.com/s2/favicons?domain={domain}&sz=64'
+        r = requests.get(url, timeout=6, headers={'User-Agent': 'Mozilla/5.0'})
+        r.raise_for_status()
+        img = Image.open(io.BytesIO(r.content)).convert('RGBA')
+        w, h = img.size
+        px = list(img.getdata())
+
+        # Collect all 4 border rows/columns
+        edge = []
+        for x in range(w):
+            edge.append(px[x])            # top row
+            edge.append(px[(h - 1) * w + x])  # bottom row
+        for y in range(h):
+            edge.append(px[y * w])        # left col
+            edge.append(px[y * w + w - 1])    # right col
+
+        counts: Counter = Counter()
+        for rv, gv, bv, av in edge:
+            if av < 128:
+                continue                          # transparent
+            if rv >= 230 and gv >= 230 and bv >= 230:
+                continue                          # near-white
+            # Quantise to 24-step buckets to merge similar shades
+            counts[(rv // 24 * 24, gv // 24 * 24, bv // 24 * 24)] += 1
+
+        if not counts:
+            return '#ffffff'
+
+        r3, g3, b3 = counts.most_common(1)[0][0]
+        return f'#{r3:02x}{g3:02x}{b3:02x}'
+    except Exception as exc:
+        print(f'favicon color {domain}: {exc}')
+        return '#ffffff'
+
+@main_bp.route('/api/bank-favicon-colors')
+def bank_favicon_colors():
+    """
+    Return dominant edge colours for all supported bank favicons.
+    No auth required — these are public brand assets.
+    Results are cached in memory so the heavy lifting only runs once.
+    """
+    global _favicon_color_cache, _favicon_lock
+    import threading
+    if _favicon_lock is None:
+        _favicon_lock = threading.Lock()
+
+    with _favicon_lock:
+        if not _favicon_color_cache:
+            result = {}
+            for source, domain in _BANK_FAVICON_DOMAINS.items():
+                result[source] = _dominant_edge_color(domain)
+            _favicon_color_cache = result
+
+    return jsonify(_favicon_color_cache)
 
 @main_bp.route('/api/data')
 @token_required
@@ -160,16 +253,26 @@ def get_data(uid):
 
     # 5. Formatear datos de gráficos
     graph_portfolios = {"CASH": [], "CRYPTO": [], "FUNDS": [], "ETFS": []}
+    graph_portfolios_inv = {"CASH": [], "CRYPTO": [], "FUNDS": [], "ETFS": []}
     for d in all_dates:
         vals = {"CASH": 0, "CRYPTO": 0, "FUNDS": 0, "ETFS": 0}
+        invs = {"CASH": 0, "CRYPTO": 0, "FUNDS": 0, "ETFS": 0}
         for p_key, p_data in hist_by_portfolio.items():
             val = p_data.get(d, {}).get("val", 0)
-            if "CASH" in p_key: vals["CASH"] += val
-            elif "CRYPT" in p_key: vals["CRYPTO"] += val
-            elif "FUND" in p_key or "FOND" in p_key: vals["FUNDS"] += val
-            elif "ETF" in p_key: vals["ETFS"] += val
-            else: vals["FUNDS"] += val # Fallback para que no se pierda en el total
-        for k in graph_portfolios: graph_portfolios[k].append(vals[k])
+            inv = p_data.get(d, {}).get("inv", 0)
+            if "CASH" in p_key:
+                vals["CASH"] += val; invs["CASH"] += inv
+            elif "CRYPT" in p_key:
+                vals["CRYPTO"] += val; invs["CRYPTO"] += inv
+            elif "FUND" in p_key or "FOND" in p_key:
+                vals["FUNDS"] += val; invs["FUNDS"] += inv
+            elif "ETF" in p_key:
+                vals["ETFS"] += val; invs["ETFS"] += inv
+            else:
+                vals["FUNDS"] += val; invs["FUNDS"] += inv
+        for k in graph_portfolios:
+            graph_portfolios[k].append(vals[k])
+            graph_portfolios_inv[k].append(invs[k])
 
     graph_assets = {}
     for asset_name, history in hist_by_asset.items():
@@ -192,8 +295,37 @@ def get_data(uid):
             "values": [global_hist_dict[d]["val"] for d in all_dates]
         },
         "history_portfolios": graph_portfolios,
+        "history_portfolios_inv": graph_portfolios_inv,
         "history_assets": graph_assets
     }))
+
+@main_bp.route('/api/transactions', methods=['POST'])
+@token_required
+def create_transaction_manual(uid):
+    data = request.json or {}
+    tx_ref = get_user_subcollection(uid, 'transactions')
+    date_str = data.get('date') or datetime.now().strftime('%Y-%m-%d')
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        date_obj = datetime.now()
+    amount = float(data.get('amount', 0))
+    doc = {
+        'date': date_obj,
+        'description': data.get('description', ''),
+        'amount': amount,
+        'source': data.get('source', 'CASH'),
+        'category_name': data.get('category', ''),
+        'category': data.get('category', ''),
+        'subcategory_name': '',
+        'subcategory': '',
+        'is_reviewed': True,
+        'is_income': amount > 0,
+        'linked_transaction_id': None,
+        'manual': True,
+    }
+    ref = tx_ref.add(doc)
+    return jsonify({'status': 'created', 'id': ref[1].id}), 201
 
 @main_bp.route('/api/transactions', methods=['GET'])
 @token_required
@@ -349,15 +481,39 @@ def get_configs(uid):
 @main_bp.route('/api/configs', methods=['POST'])
 @token_required
 def save_config(uid):
+    from datetime import datetime, date, timezone
     data = request.json
     name = data.get('name')
     if not name: return jsonify({"error": "Name required"}), 400
-    
-    configs_ref = get_user_subcollection(uid, 'asset_configs')
-    # Usamos el nombre como ID para facilitar la vinculación con snapshots
-    configs_ref.document(name).set(data)
-    return jsonify({"status": "success"})
 
+    configs_ref = get_user_subcollection(uid, 'asset_configs')
+
+    today_str = date.today().isoformat()
+
+    if data.get('subtype') == 'cash' and data.get('type') == 'auto':
+        existing_doc = configs_ref.document(name).get()
+        existing = existing_doc.to_dict() if existing_doc.exists else {}
+
+        new_holdings = data.get('holdings')
+        old_holdings = existing.get('holdings')
+        balance_changed = (new_holdings is not None) and (new_holdings != old_holdings)
+
+        if balance_changed or not existing_doc.exists:
+            # Store the exact moment the user set this manual balance.
+            # Sync will include only transactions whose created_at (inventoried time)
+            # is strictly AFTER this timestamp — regardless of their transaction date.
+            data['manual_balance_datetime'] = datetime.now(timezone.utc)
+            data['manual_balance_date'] = today_str  # kept for legacy fallback only
+        else:
+            # Preserve existing cutoffs — user changed a different field, not the balance.
+            for field in ('manual_balance_datetime', 'manual_balance_date'):
+                existing_val = existing.get(field)
+                if existing_val:
+                    data[field] = existing_val
+
+    data['updated_at'] = datetime.now(timezone.utc)
+    configs_ref.document(name).set(data)
+    return jsonify({"status": "success", "manual_balance_date": data.get('manual_balance_date', today_str)})
 @main_bp.route('/api/configs/<name>', methods=['DELETE'])
 @token_required
 def delete_config(uid, name):
@@ -387,66 +543,224 @@ def sync_all(uid):
 @main_bp.route('/api/portfolio/analysis', methods=['POST'])
 @token_required
 def portfolio_analysis(uid):
-    data = request.json
-    # Esta ruta suele llamar a un servicio de IA para analizar el portfolio
-    # Por ahora devolvemos un placeholder o el resultado de un análisis básico
-    return jsonify({
-        "analysis": "Tu cartera tiene una buena diversificación. Considera aumentar el peso en ETFs si buscas menos volatilidad.",
-        "risk_level": "Moderado"
-    })
+    import os, json as _json
+    data = request.json or {}
+    portfolio_str = data.get('portfolio', '{}')
+
+    groq_key = os.getenv('GROQ_API_KEY')
+    if groq_key:
+        try:
+            from groq import Groq
+            client = Groq(api_key=groq_key)
+            prompt = f"""Eres un asesor financiero experto analizando el portfolio de un inversor particular español.
+Datos del portfolio: {portfolio_str}
+
+Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones fuera del JSON.
+
+IMPORTANTE — reglas estrictas:
+- NO repitas números que el usuario ya ve en pantalla (valor total, beneficio, %).
+- Sí menciona si algo es bueno, malo o mejorable en comparación con benchmarks o buenas prácticas.
+- Cada insight debe ser una recomendación accionable o una conclusión no obvia.
+- Tono directo, sin relleno, sin elogios vacíos.
+
+Formato requerido:
+{{"summary": "Una frase que evalúe la salud global del portfolio (comparación con benchmark, riesgo, concentración).",
+"items": [
+  {{"icon": "📊", "text": "Insight accionable 1 (< 90 chars)"}},
+  {{"icon": "⚡", "text": "Insight accionable 2 (< 90 chars)"}},
+  {{"icon": "🎯", "text": "Insight accionable 3 (< 90 chars)"}}
+]}}"""
+            resp = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3, max_tokens=350
+            )
+            text = resp.choices[0].message.content.strip()
+            if text.startswith("```"):
+                text = text.split("```")[1]
+                if text.startswith("json"): text = text[4:]
+            result = _json.loads(text)
+            return jsonify(result)
+        except Exception as e:
+            print(f"DEBUG: Groq portfolio analysis error: {e}")
+
+    # Fallback: rule-based insights (non-obvious observations only)
+    try:
+        p = _json.loads(portfolio_str)
+        total = p.get('totalValue', 0) or 1
+        profit = p.get('totalProfit', 0)
+        invested = p.get('totalInvested', 0) or 1
+        twr = p.get('twr', 0)
+        dist = p.get('distribution', {})
+        cash_val  = dist.get('CASH',   {}).get('total_val', 0)
+        etfs_val  = dist.get('ETFS',   {}).get('total_val', 0)
+        funds_val = dist.get('FUNDS',  {}).get('total_val', 0)
+        crypto_val = dist.get('CRYPTO',{}).get('total_val', 0)
+        cash_pct   = cash_val  / total * 100
+        inv_pct    = (etfs_val + funds_val + crypto_val) / total * 100
+        crypto_pct = crypto_val / total * 100
+
+        items = []
+        # Cash concentration insight
+        if cash_pct > 50:
+            items.append({"icon": "💡", "text": "Más de la mitad en efectivo: la inflación erosiona su valor. Considera DCA en fondos."})
+        elif cash_pct > 30:
+            items.append({"icon": "💡", "text": f"Colchón de liquidez amplio. Asegúrate de que el exceso esté en cuenta remunerada."})
+        elif cash_pct < 5 and inv_pct > 80:
+            items.append({"icon": "⚠️", "text": "Liquidez muy baja. Mantén 3-6 meses de gastos en efectivo antes de invertir más."})
+
+        # TWR vs market benchmark
+        if twr > 10:
+            items.append({"icon": "🏆", "text": f"TWR superior al 10%: estás batiendo la rentabilidad media de los fondos españoles."})
+        elif 5 < twr <= 10:
+            items.append({"icon": "📈", "text": "Rentabilidad en línea con el mercado. Revisa si los costes de gestión son competitivos."})
+        elif 0 < twr <= 5:
+            items.append({"icon": "🔍", "text": "Rentabilidad por debajo del S&P 500 histórico (~10% anual). Evalúa la asignación."})
+
+        # Crypto concentration risk
+        if crypto_pct > 20:
+            items.append({"icon": "⚡", "text": f"Alta exposición a crypto ({crypto_pct:.0f}%). Activo de alta volatilidad — revisa si encaja con tu perfil."})
+        elif crypto_pct == 0 and inv_pct > 0:
+            items.append({"icon": "🎯", "text": "Sin exposición a crypto: perfil conservador. Un 5% podría mejorar el potencial de retorno."})
+
+        if not items:
+            items.append({"icon": "✅", "text": "Portfolio equilibrado. Mantén las aportaciones periódicas para aprovechar el interés compuesto."})
+
+        pct = profit / invested * 100
+        trend = "por encima" if twr > 7 else "por debajo"
+        summary = f"Rentabilidad {trend} de la media histórica del mercado. El {cash_pct:.0f}% en efectivo {'limita' if cash_pct>35 else 'complementa'} tu exposición inversora."
+        return jsonify({"summary": summary, "items": items[:3]})
+    except Exception:
+        return jsonify({"summary": "Análisis no disponible.", "items": []})
+
+def _norm_desc(description: str) -> str:
+    """Lowercase + collapsed whitespace.  'PAGO ZARA' == 'Pago Zara' == 'pago  zara'."""
+    return ' '.join(str(description).lower().strip().split())
+
+
+def _desc_similar(a: str, b: str, threshold: float = 0.85) -> bool:
+    """True if two normalised descriptions are ≥threshold similar.
+    Catches minor differences like 'Concepto: Sesion' vs 'Concepto Sesion'."""
+    if a == b:
+        return True
+    return SequenceMatcher(None, a, b).ratio() >= threshold
+
+
+def _dedup_sig(date_str: str, amount: float, description: str, source: str) -> tuple:
+    """Normalised dedup key — case-insensitive, whitespace-collapsed description."""
+    return (date_str, round(float(amount), 2), _norm_desc(description), source)
+
+
+_BANK_PARSERS = {
+    'REVOLUT':       BankParser.parse_revolut,
+    'SANTANDER':     BankParser.parse_santander,
+    'EDENRED':       BankParser.parse_edenred,
+    'BBVA':          BankParser.parse_bbva,
+    'CAIXABANK':     BankParser.parse_caixabank,
+    'SABADELL':      BankParser.parse_sabadell,
+    'ING':           BankParser.parse_ing,
+    'BANKINTER':     BankParser.parse_bankinter,
+    'OPENBANK':      BankParser.parse_openbank,
+    'N26':           BankParser.parse_n26,
+    'WISE':          BankParser.parse_wise,
+    'ABANCA':        BankParser.parse_abanca,
+    'KUTXABANK':     BankParser.parse_kutxabank,
+    'UNICAJA':       BankParser.parse_unicaja,
+    'IBERCAJA':      BankParser.parse_ibercaja,
+    'CAJAMAR':       BankParser.parse_cajamar,
+    'EVOBANK':       BankParser.parse_evobank,
+    'MYINVESTOR':    BankParser.parse_myinvestor,
+    'TRADEREPUBLIC': BankParser.parse_traderepublic,
+}
+
 
 @main_bp.route('/api/transactions/import', methods=['POST'])
 @token_required
 def import_transactions(uid):
     source = request.form.get('source')
     file = request.files.get('file')
-    
+
     if not file:
         return jsonify({'error': 'No file uploaded'}), 400
-        
-    file_content = file.read()
-    
-    # Seleccionar parser
-    if source == 'REVOLUT':
-        items = BankParser.parse_revolut(file_content)
-    elif source == 'SANTANDER':
-        items = BankParser.parse_santander(file_content)
-    elif source == 'EDENRED':
-        items = BankParser.parse_edenred(file_content)
-    else:
-        return jsonify({'error': 'Invalid source'}), 400
 
-    # Obtener transacciones existentes para evitar duplicados
+    file_content = file.read()
+
+    # ── 1. Try AI-powered universal parser first ──────────────────────────
+    items = []
+    try:
+        ai = AIParser()
+        items = ai.parse_universal(file_content, source)
+        print(f'[import] AI parser returned {len(items)} rows for {source}')
+    except Exception as e:
+        print(f'[import] AI parser exception: {e}')
+        items = []
+
+    # ── 2. Fall back to rule-based parser if AI got <3 results ───────────
+    if len(items) < 3:
+        parser_fn = _BANK_PARSERS.get(source)
+        if not parser_fn:
+            if not items:
+                return jsonify({'error': f'Fuente no soportada: {source}'}), 400
+        else:
+            fallback = parser_fn(file_content)
+            if len(fallback) > len(items):
+                print(f'[import] using rule-based fallback: {len(fallback)} rows')
+                items = fallback
+
+    # ── 3. Existing transactions → fuzzy-date dedup ───────────────────────
     tx_ref = get_user_subcollection(uid, 'transactions')
     existing_docs = tx_ref.get()
-    
-    # Mapa para deduplicación: (fecha_str, importe, descripción, fuente)
-    existing_sigs = set()
+
+    # Build list for fuzzy matching: same desc+amount+source, date within ±4 days.
+    # This tolerates the difference between "operation date" (mobile export) and
+    # "settlement date" (web export) that Santander and other banks use.
+    existing_txs = []
     for doc in existing_docs:
         d = doc.to_dict()
         dt = d.get('date')
         if hasattr(dt, 'strftime'):
-            dt_str = dt.strftime('%Y-%m-%d')
+            dt_naive = dt.replace(tzinfo=None) if getattr(dt, 'tzinfo', None) else dt
         else:
-            dt_str = str(dt)[:10]
-        
-        sig = (dt_str, float(d.get('amount', 0)), d.get('description', ''), d.get('source', ''))
-        existing_sigs.add(sig)
+            try:
+                dt_naive = datetime.strptime(str(dt)[:10], '%Y-%m-%d')
+            except Exception:
+                continue
+        existing_txs.append({
+            'date':   dt_naive,
+            'amount': round(float(d.get('amount', 0)), 2),
+            'desc':   _norm_desc(d.get('description', '')),
+            'source': d.get('source', ''),
+        })
+
+    def _fuzzy_dup(item_dt, amount, description, source, max_days=4):
+        amt  = round(float(amount), 2)
+        desc = _norm_desc(description)
+        naive = item_dt.replace(tzinfo=None) if getattr(item_dt, 'tzinfo', None) else item_dt
+        for ex in existing_txs:
+            if ex['source'] != source or ex['amount'] != amt:
+                continue
+            if not _desc_similar(ex['desc'], desc):
+                continue
+            if abs((naive - ex['date']).days) <= max_days:
+                return True
+        return False
 
     new_count = 0
+    # Also track sigs seen in this batch to avoid duplicates within the same file
+    batch_sigs = set()
     debug_log = []
     def log(msg):
         debug_log.append(f"{datetime.now().isoformat()} - {msg}")
 
     log(f"Iniciando importación de {len(items)} transacciones para {source}")
-    
+
     categorizer = AICategorizer()
-    
+
     # Cache de categorías y subcategorías
     cat_ref = get_user_subcollection(uid, 'categories')
     cat_docs = cat_ref.get()
     cat_map = {doc.to_dict()['name'].lower(): doc.id for doc in cat_docs}
-    
+
     sub_ref = get_user_subcollection(uid, 'subcategories')
     sub_docs = sub_ref.get()
     sub_map = {}
@@ -457,11 +771,12 @@ def import_transactions(uid):
 
     for item in items:
         dt_str = item['date'].strftime('%Y-%m-%d')
-        sig = (dt_str, float(item['amount']), item['description'], item['source'])
-        
-        if sig in existing_sigs:
+        sig = _dedup_sig(dt_str, item['amount'], item['description'], item['source'])
+
+        if _fuzzy_dup(item['date'], item['amount'], item['description'], item['source']) or sig in batch_sigs:
             log(f"IGNORADA (Duplicada): {dt_str} - {item['amount']} - {item['description'][:30]}")
             continue
+        batch_sigs.add(sig)
 
         # Clasificación por IA
         try:
@@ -474,10 +789,13 @@ def import_transactions(uid):
         s_key = f"{c_id}_{sub_name.lower()}" if c_id and sub_name else None
         s_id = sub_map.get(s_key) if s_key else None
 
+        # Normalize description to lowercase before saving so all records are consistent
+        desc_saved = _norm_desc(item['description'])
+
         # Guardar en Firestore
         tx_ref.add({
             'date': item['date'],
-            'description': item['description'],
+            'description': desc_saved,
             'amount': item['amount'],
             'source': item['source'],
             'raw_text': item['raw_text'],
@@ -487,7 +805,7 @@ def import_transactions(uid):
             'created_at': datetime.now()
         })
         new_count += 1
-        log(f"NUEVA: {dt_str} - {item['amount']} - {item['description'][:30]}")
+        log(f"NUEVA: {dt_str} - {item['amount']} - {desc_saved[:30]}")
 
     # Guardar log de diagnóstico
     try:
@@ -569,12 +887,15 @@ def save_subscription(uid):
         sub_ref = get_user_subcollection(uid, 'subscriptions')
         
         # Clean data for firestore
+        raw_day = data.get('dayOfMonth')
         clean_data = {
             'name': data.get('name'),
             'amount': float(data.get('amount', 0)),
-            'category': data.get('category', 'Suscripción'),
-            'dayOfMonth': int(data.get('dayOfMonth', 1)),
-            'isManual': data.get('isManual', True),
+            'category': data.get('category', 'Otro'),
+            'dayOfMonth': int(raw_day) if raw_day and str(raw_day).strip() else None,
+            'frequency': data.get('frequency', 'mensual'),
+            'timesPerMonth': int(data['timesPerMonth']) if data.get('timesPerMonth') else None,
+            'isManual': True,
             'active': data.get('active', True),
             'updated_at': datetime.now()
         }
@@ -587,6 +908,17 @@ def save_subscription(uid):
             sub_id = doc_ref[1].id
             
         return jsonify({"status": "success", "id": sub_id})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@main_bp.route('/api/subscriptions/<id>', methods=['PATCH'])
+@token_required
+def patch_subscription(uid, id):
+    try:
+        data = request.json or {}
+        sub_ref = get_user_subcollection(uid, 'subscriptions')
+        sub_ref.document(id).update(data)
+        return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

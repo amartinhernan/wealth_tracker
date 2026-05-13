@@ -1,7 +1,59 @@
+<style>
+/* ── Monthly heat table ── */
+.monthly-heat-table {
+    width: 100%; border-collapse: collapse; font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.monthly-heat-table th {
+    padding: 5px 8px; text-align: right; font-size: 10px; font-weight: 700;
+    color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.monthly-heat-table th:first-child { text-align: left; }
+.monthly-heat-table td {
+    padding: 4px 8px; text-align: right; font-size: 11px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.monthly-heat-table td:first-child {
+    text-align: left; font-size: 10px; font-weight: 600;
+    color: var(--text-2); font-family: 'DM Sans', sans-serif;
+}
+.monthly-heat-table tr.estimated td { color: var(--text-3); font-style: italic; }
+.monthly-heat-table tr:last-child td { border-bottom: none; }
+.monthly-heat-table tr:hover td { background: var(--bg); }
+.mh-cell-pos { color: var(--green); font-weight: 600; }
+.mh-cell-neg { color: var(--red);   font-weight: 600; }
+.mh-cell-zero { color: var(--text-3); }
+.mh-total { font-weight: 700 !important; border-left: 1px solid var(--border); }
+.mh-tot-pos { color: var(--green) !important; font-weight: 800 !important; }
+.mh-tot-neg { color: var(--red)   !important; font-weight: 800 !important; }
+
+/* ── Asset performers ── */
+.perf-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 8px;
+    transition: background 0.15s;
+}
+.perf-row:hover { background: var(--bg); }
+.perf-rank {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--bg2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; color: var(--text-3);
+    flex-shrink: 0;
+}
+.perf-rank.top { background: rgba(21,128,61,0.12); color: var(--green); border-color: rgba(21,128,61,0.2); }
+.perf-rank.bot { background: rgba(220,38,38,0.08); color: var(--red); border-color: rgba(220,38,38,0.12); }
+.perf-name { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.perf-type { font-size: 9px; font-weight: 700; color: var(--text-3); background: var(--bg2); padding: 1px 6px; border-radius: 100px; flex-shrink: 0; }
+.perf-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.perf-amt { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3); flex-shrink: 0; }
+</style>
+
 <div id="page-dashboard">
                 <div class="page-head">
                     <div>
-                        <h1 class="page-title">Portfolio de Inversiones</h1>
+                        <h1 class="page-title">Portfolio Overview</h1>
                         <p class="page-sub">Rendimiento global y distribución de activos</p>
                     </div>
                     <div style="display:flex;gap:8px;align-items:center;">
@@ -132,7 +184,7 @@
                                     style="background:var(--etfs)"></span>ETFs</div>
                         </div>
                         <div class="section-label">Evolución del Patrimonio</div>
-                        <div style="height:260px;position:relative;margin-bottom:10px">
+                        <div class="chart-wrap" style="height:260px;position:relative;margin-bottom:10px">
                             <canvas id="trendChart" role="img" aria-label="Evolución del patrimonio"></canvas>
                         </div>
                         <div class="card-sep"></div>
@@ -141,13 +193,34 @@
                                 Rentabilidad Mensual (€)
                                 <div class="tip-wrap">
                                     <div class="tip-icon">?</div>
-                                    <div class="tip-bubble">Diferencia de valor entre el inicio y fin de cada mes. Verde
-                                        = ganó valor. Rojo = perdió valor. No refleja aportaciones del mes.</div>
+                                    <div class="tip-bubble">Cambio mensual de patrimonio usando el último dato disponible de cada mes. Efectivo: variación neta de saldo (ingresos - gastos). Inversiones (ETFs/Fondos/Crypto): solo ganancia/pérdida de mercado, sin contar nuevas aportaciones. Barras translúcidas = meses interpolados sin dato real.</div>
                                 </div>
                             </div>
+                            <div style="display:flex;align-items:center;gap:10px;font-size:10px;color:var(--text-3);">
+                                <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:rgba(21,128,61,.65);border-radius:2px;display:inline-block;"></span>Real</span>
+                                <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:rgba(21,128,61,.22);border:1.5px dashed rgba(21,128,61,.6);border-radius:2px;display:inline-block;"></span>Estimado</span>
+                            </div>
                         </div>
-                        <div style="height:190px;position:relative">
+                        <div class="chart-wrap" style="height:180px;position:relative">
                             <canvas id="monthlyChart"></canvas>
+                        </div>
+
+                        <!-- Monthly P&L table by category -->
+                        <div id="monthly-table-wrap" style="margin-top:16px;display:none;">
+                            <div class="card-sep" style="margin-bottom:14px;"></div>
+                            <div class="section-label" style="margin-bottom:8px;">
+                                P&L Mensual por Categoría
+                                <div class="tip-wrap" style="display:inline-flex;vertical-align:middle;margin-left:4px">
+                                    <div class="tip-icon">?</div>
+                                    <div class="tip-bubble">Ganancia o pérdida de cada tipo de activo en cada mes del período seleccionado. Las filas en cursiva con ~ son meses interpolados entre snapshots.</div>
+                                </div>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table id="monthly-heat-table" class="monthly-heat-table">
+                                    <thead id="monthly-heat-head"></thead>
+                                    <tbody id="monthly-heat-tbody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -181,6 +254,16 @@
                             </div>
                         </div>
                         <div id="alloc-list" style="display:flex;flex-direction:column;gap:16px"></div>
+
+                        <div class="card-sep" style="margin:18px 0 14px;"></div>
+                        <div class="section-label" style="margin-bottom:10px;">
+                            Ranking de Activos
+                            <div class="tip-wrap" style="display:inline-flex;vertical-align:middle;margin-left:4px">
+                                <div class="tip-icon">?</div>
+                                <div class="tip-bubble">Activos ordenados por rentabilidad acumulada (mejor a peor). Solo activos con precio de mercado.</div>
+                            </div>
+                        </div>
+                        <div id="asset-performers" style="display:flex;flex-direction:column;gap:6px;"></div>
                     </div>
                 </div>
 

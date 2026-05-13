@@ -16,6 +16,20 @@
 </head>
 
 <body>
+    <!-- ── MOBILE TOP BAR (logout + logo) — only visible on mobile ── -->
+    <div class="mobile-topbar" id="mobile-topbar">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;background:var(--text);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="white" stroke-width="2.2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            <span style="font-size:14px;font-weight:700;letter-spacing:-0.3px;color:var(--text);">TrackWealth</span>
+        </div>
+        <button class="mobile-topbar-logout" onclick="logout()">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Salir
+        </button>
+    </div>
+
     <div class="layout">
 
         <!-- ─── SIDEBAR ─── -->
@@ -28,8 +42,34 @@
 
     </div><!-- end layout -->
 
+    <!-- ── MOBILE BOTTOM NAV ── -->
+    <nav class="mobile-nav" id="mobile-nav">
+        <div class="mobile-nav-inner">
+            <button class="mobile-nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                <span>Portfolio</span>
+            </button>
+            <button class="mobile-nav-item" data-page="transactions" onclick="showPage('transactions')">
+                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                <span>Transacc.</span>
+            </button>
+            <button class="mobile-nav-item" data-page="finanzas" onclick="showPage('finanzas')">
+                <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <span>Cash Flow</span>
+            </button>
+            <button class="mobile-nav-item" data-page="suscripciones" onclick="showPage('suscripciones')">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Suscripc.</span>
+            </button>
+            <button class="mobile-nav-item" data-page="retirement" onclick="showPage('retirement')">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <span>Multiverso</span>
+            </button>
+        </div>
+    </nav>
+
     <!-- ── CATEGORY MODAL ── -->
-    <div class="fs-overlay" id="cat-ov" onclick="if(event.target==this) closeCatModal()">
+    <div class="fs-overlay" id="cat-ov">
         <div class="fs-box" style="max-width:600px">
             <button class="fs-close" onclick="closeCatModal()">×</button>
             <div class="fs-title">Gestionar Categorías</div>
@@ -43,7 +83,7 @@
     </div>
 
     <!-- ── ASSET MANAGER MODAL ── -->
-    <div id="modal-manage" class="modal-ov" onclick="if(event.target===this) closeAssetManager()">
+    <div id="modal-manage" class="modal-ov">
         <div class="modal-card">
             <div class="modal-header">
                 <div>
@@ -64,13 +104,39 @@
                 </div>
                 <div id="tab-add" class="tab-content" style="display:none">
                     <div class="subtype-selector">
-                        <button class="pill active" id="sub-btn-cash" onclick="setSubtype('cash')">Efectivo</button>
-                        <button class="pill" id="sub-btn-market" onclick="setSubtype('market')">Mercado</button>
-                        <button class="pill" id="sub-btn-indexa" onclick="setSubtype('indexa')">Indexa</button>
+                        <button class="pill active" id="sub-btn-cash"   onclick="setSubtype('cash')">Efectivo</button>
+                        <button class="pill"        id="sub-btn-market" onclick="setSubtype('market')">Mercado</button>
+                        <button class="pill"        id="sub-btn-robo"   onclick="setSubtype('indexa')">Gestoras</button>
                     </div>
                     <form id="asset-form" onsubmit="event.preventDefault();saveAsset()">
                         <input type="hidden" id="asset-id">
                         <input type="hidden" id="asset-subtype" value="cash">
+
+                        <!-- GESTORAS: provider picker -->
+                        <div id="robo-fields" style="display:none">
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">Gestora / Roboadvisor</label>
+                                <select id="robo-provider" class="form-input" onchange="onRoboProviderChange()">
+                                    <option value="indexa">Indexa Capital</option>
+                                    <option value="myinvestor" disabled>MyInvestor (próximamente)</option>
+                                    <option value="openbank" disabled>Openbank Roboadvisor (próximamente)</option>
+                                </select>
+                            </div>
+                            <!-- Indexa fields -->
+                            <div id="robo-indexa-fields" style="margin-top:14px">
+                                <div class="form-grid">
+                                    <div class="form-group"><label class="form-label">API Token</label>
+                                        <input type="password" id="indexa-token" class="form-input"></div>
+                                    <div class="form-group"><label class="form-label">Modo Sync</label>
+                                        <select id="asset-type" class="form-input">
+                                            <option value="auto">Automático (API)</option>
+                                            <option value="manual">Manual</option>
+                                        </select></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MERCADO: ticker search -->
                         <div id="market-fields" style="display:none">
                             <div class="form-group" style="position:relative">
                                 <label class="form-label">Buscar Activo</label>
@@ -79,10 +145,11 @@
                                 <div id="search-results" class="search-results"></div>
                             </div>
                         </div>
+
                         <div class="form-grid">
                             <div class="form-group"><label class="form-label">Nombre</label><input type="text"
                                     id="asset-name" class="form-input" required></div>
-                            <div class="form-group"><label class="form-label">Categoría</label>
+                            <div class="form-group" id="category-group"><label class="form-label">Categoría</label>
                                 <select id="asset-portfolio" class="form-input">
                                     <option value="CASH">Efectivo / Bancos</option>
                                     <option value="ETFS">ETFs</option>
@@ -95,15 +162,8 @@
                         <div class="form-group" id="ticker-group" style="display:none"><label
                                 class="form-label">Ticker</label><input type="text" id="asset-ticker"
                                 class="form-input"></div>
-                        <div id="indexa-fields" style="display:none">
-                            <div class="form-group"><label class="form-label">API Token</label><input type="password"
-                                    id="indexa-token" class="form-input"></div>
-                            <div class="form-group"><label class="form-label">Modo Sincronización</label><select
-                                    id="asset-type" class="form-input">
-                                    <option value="manual">Manual</option>
-                                    <option value="auto">API</option>
-                                </select></div>
-                        </div>
+                        <!-- legacy hidden — kept so save logic still reads it for non-indexa subtypes -->
+                        <div id="indexa-fields" style="display:none"></div>
                         <div id="cash-fields" style="display:none">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -120,6 +180,16 @@
                                         <option value="REVOLUT">Revolut</option>
                                         <option value="EDENRED">Edenred</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Cash anchor info — shown only for auto cash accounts -->
+                        <div id="cash-anchor-info" style="display:none; margin-bottom:14px; padding:12px 14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.18); border-radius:10px; font-size:12px; color:var(--text-2);">
+                            <div style="display:flex;align-items:flex-start;gap:8px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <div>
+                                    <span style="font-weight:700;color:var(--accent);">Balance anclado el <span id="anchor-date-label">—</span></span><br>
+                                    El saldo que introduzcas aquí es el punto de partida. Solo se añadirán las transacciones <strong>posteriores a hoy</strong> al sincronizar.
                                 </div>
                             </div>
                         </div>
@@ -146,6 +216,150 @@
             </div>
         </div>
     </div>
+
+    <!-- ── ONBOARDING OVERLAY ── -->
+    <div id="onboarding-overlay" role="dialog" aria-modal="true">
+        <div class="ob-card">
+
+            <!-- Progress bar: 4 steps (hidden on welcome) -->
+            <div class="ob-progress" id="ob-progress" style="display:none">
+                <div class="ob-prog-item">
+                    <div class="ob-prog-dot" id="ob-pdot-0"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <span>Importar</span>
+                </div>
+                <div class="ob-prog-line" id="ob-pline-0"></div>
+                <div class="ob-prog-item">
+                    <div class="ob-prog-dot" id="ob-pdot-1"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <span>Categorías</span>
+                </div>
+                <div class="ob-prog-line" id="ob-pline-1"></div>
+                <div class="ob-prog-item">
+                    <div class="ob-prog-dot" id="ob-pdot-2"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <span>Portfolio</span>
+                </div>
+                <div class="ob-prog-line" id="ob-pline-2"></div>
+                <div class="ob-prog-item">
+                    <div class="ob-prog-dot" id="ob-pdot-3"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <span>Listo</span>
+                </div>
+            </div>
+
+            <!-- ── Panel 0: Welcome ── -->
+            <div class="ob-panel" id="ob-panel-0">
+                <div class="ob-welcome-icon">📊</div>
+                <h2 class="ob-title">¡Bienvenido a TrackWealth!</h2>
+                <p class="ob-sub">Tu centro de control financiero personal.<br>En 4 pasos tendrás tu dashboard con datos reales.</p>
+                <div class="ob-steps-preview">
+                    <div class="ob-step-prev">
+                        <div class="ob-step-prev-num" style="background:var(--accent)">1</div>
+                        <div><div class="ob-step-prev-title">Importa tus transacciones</div><div class="ob-step-prev-sub">CSV de tu banco — detectamos el formato</div></div>
+                    </div>
+                    <div class="ob-step-prev">
+                        <div class="ob-step-prev-num" style="background:#D97706">2</div>
+                        <div><div class="ob-step-prev-title">Configura tus categorías</div><div class="ob-step-prev-sub">Elige las categorías de gasto que usas</div></div>
+                    </div>
+                    <div class="ob-step-prev">
+                        <div class="ob-step-prev-num" style="background:#7C3AED">3</div>
+                        <div><div class="ob-step-prev-title">Categoriza tus movimientos</div><div class="ob-step-prev-sub">Un clic y el análisis ya tiene sentido</div></div>
+                    </div>
+                    <div class="ob-step-prev">
+                        <div class="ob-step-prev-num" style="background:var(--crypto)">4</div>
+                        <div><div class="ob-step-prev-title">Añade tu portfolio</div><div class="ob-step-prev-sub">ETFs, crypto, fondos, efectivo...</div></div>
+                    </div>
+                </div>
+                <button class="ob-btn-primary" onclick="obGoStep(1)">Empezar configuración →</button>
+                <button class="ob-btn-skip" onclick="obClose()">Ya lo configuro más tarde</button>
+            </div>
+
+            <!-- ── Panel 1: Importar transacciones ── -->
+            <div class="ob-panel" id="ob-panel-1" style="display:none">
+                <h2 class="ob-title" style="text-align:left">Importa tus movimientos bancarios</h2>
+                <p class="ob-sub" style="text-align:left;margin-bottom:16px;">Selecciona tu banco, descarga el extracto y súbelo. Detectamos el formato automáticamente.</p>
+                <div class="ob-bank-grid" id="ob-bank-grid"></div>
+                <div class="ob-instructions" id="ob-instructions" style="display:none">
+                    <div class="ob-inst-title" id="ob-inst-title"></div>
+                    <ol class="ob-inst-steps" id="ob-inst-list"></ol>
+                    <div class="ob-inst-note" id="ob-inst-note"></div>
+                </div>
+                <div class="ob-upload-zone" id="ob-upload-area" onclick="if(obSelectedBank)document.getElementById('ob-file-input').click();else alert('Selecciona primero tu banco.')">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.35"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <span id="ob-upload-label">Selecciona tu banco arriba, luego sube el archivo aquí</span>
+                </div>
+                <input type="file" id="ob-file-input" style="display:none" accept=".csv,.xls,.xlsx" onchange="obHandleImport(this)">
+                <div class="ob-import-ok" id="ob-import-status" style="display:none">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span id="ob-import-count">0 transacciones importadas</span>
+                </div>
+                <div class="ob-footer">
+                    <button class="ob-btn-ghost" onclick="obGoStep(2)">Omitir</button>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <button class="ob-btn-link" onclick="obClose();setTimeout(openManualTxModal,200)">+ Manual</button>
+                        <button class="ob-btn-primary ob-btn-sm" onclick="obGoStep(2)">Continuar →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Panel 2: Configurar categorías ── -->
+            <div class="ob-panel" id="ob-panel-2" style="display:none">
+                <h2 class="ob-title" style="text-align:left">Configura tus categorías de gasto</h2>
+                <p class="ob-sub" style="text-align:left;margin-bottom:12px;">Estas son las más habituales. Selecciona las que uses y las crearemos automáticamente con subcategorías incluidas.</p>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <span style="font-size:11px;font-weight:700;color:var(--text-3);" id="ob-cat-count">Cargando...</span>
+                    <button class="ob-btn-link" onclick="obToggleAllCats()">Seleccionar todas</button>
+                </div>
+                <div class="ob-cat-grid" id="ob-cat-grid"><!-- rendered by JS --></div>
+                <div class="ob-import-ok" id="ob-cats-ok" style="display:none">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span id="ob-cats-ok-txt">Categorías creadas</span>
+                </div>
+                <div class="ob-footer">
+                    <button class="ob-btn-ghost" onclick="obGoStep(3)">Omitir</button>
+                    <button class="ob-btn-primary ob-btn-sm" id="ob-btn-create-cats" onclick="obCreateCategories()">Crear categorías →</button>
+                </div>
+            </div>
+
+            <!-- ── Panel 3: Categorizar transacciones ── -->
+            <div class="ob-panel" id="ob-panel-3" style="display:none">
+                <h2 class="ob-title" style="text-align:left">Categoriza tus transacciones</h2>
+                <p class="ob-sub" style="text-align:left;margin-bottom:4px;">Asigna una categoría a cada movimiento. Puedes completarlo ahora o hacerlo más adelante desde la pestaña <strong>Transacciones</strong>.</p>
+                <button class="ob-autocat-btn" id="ob-autocat-btn" onclick="obAutoCategorize()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Auto-categorizar con patrones
+                </button>
+                <div class="ob-tx-list" id="ob-tx-list"><!-- rendered by JS --></div>
+                <div class="ob-footer">
+                    <button class="ob-btn-ghost" onclick="obGoStep(4)">Hacerlo más tarde</button>
+                    <button class="ob-btn-primary ob-btn-sm" onclick="obGoStep(4)">Siguiente: Portfolio →</button>
+                </div>
+            </div>
+
+            <!-- ── Panel 4: Añadir activos / portfolio ── -->
+            <div class="ob-panel" id="ob-panel-4" style="display:none">
+                <h2 class="ob-title" style="text-align:left">Añade tu portfolio de inversiones</h2>
+                <p class="ob-sub" style="text-align:left;margin-bottom:14px;">Haz clic para añadir cada activo. Puedes añadir más en cualquier momento.</p>
+                <div id="ob-portfolio-content"><!-- rendered by JS --></div>
+                <div class="ob-import-ok" id="ob-assets-status" style="display:none">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span id="ob-assets-count">0 activos añadidos</span>
+                </div>
+                <div class="ob-footer">
+                    <button class="ob-btn-ghost" onclick="obGoStep(5)">Omitir</button>
+                    <button class="ob-btn-primary ob-btn-sm" onclick="obGoStep(5)">Finalizar →</button>
+                </div>
+            </div>
+
+            <!-- ── Panel 5: Done ── -->
+            <div class="ob-panel" id="ob-panel-5" style="display:none">
+                <div class="ob-done-anim">🎉</div>
+                <h2 class="ob-title">¡Tu dashboard está listo!</h2>
+                <p class="ob-sub">Has completado la configuración. Aquí tienes el resumen:</p>
+                <div class="ob-summary" id="ob-summary"></div>
+                <button class="ob-btn-primary" onclick="obClose()" style="margin-top:20px;">Ir a mi Dashboard →</button>
+                <button class="ob-btn-skip" onclick="obGoStep(1)">← Añadir más datos</button>
+            </div>
+
+        </div><!-- .ob-card -->
+    </div><!-- #onboarding-overlay -->
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>

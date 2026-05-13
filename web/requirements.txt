@@ -9,3 +9,5 @@ xlrd
 openpyxl
 firebase-admin
 gunicorn
+groq
+Pillow

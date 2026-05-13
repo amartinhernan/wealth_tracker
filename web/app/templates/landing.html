@@ -6,24 +6,33 @@
     <title>TrackWealth — Tu patrimonio, bajo control</title>
     <meta name="description" content="Gestiona tu patrimonio, inversiones y gastos en un solo lugar. Gratis, privado y potente.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        
+
         :root {
-            --bg: #06080D;
-            --bg2: #0C0F18;
-            --surface: #111622;
-            --surface2: #181D2E;
-            --border: rgba(255,255,255,0.06);
-            --text: #F0EDE8;
-            --text-2: #A8A4B8;
-            --text-3: #6B6880;
-            --accent: #3B82F6;
-            --accent-2: #22D3EE;
-            --green: #22C55E;
-            --red: #EF4444;
-            --gradient: linear-gradient(135deg, #3B82F6 0%, #22D3EE 50%, #22C55E 100%);
+            --bg: #F4F3F0;
+            --bg2: #ECEAE5;
+            --surface: #FFFFFF;
+            --border: rgba(0,0,0,0.07);
+            --border-md: rgba(0,0,0,0.13);
+            --text: #0E0D0B;
+            --text-2: #5C5A54;
+            --text-3: #A8A49C;
+            --accent: #2563EB;
+            --accent-2: #3B82F6;
+            --accent-light: rgba(37,99,235,0.08);
+            --green: #15803D;
+            --green-bg: #DCFCE7;
+            --green-2: #22C55E;
+            --red: #DC2626;
+            --purple: #7C3AED;
+            --cyan: #0891B2;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+            --r: 16px;
+            --r-sm: 10px;
         }
 
         html { scroll-behavior: smooth; }
@@ -35,174 +44,560 @@
             overflow-x: hidden;
         }
 
-        /* ═══════════════ NAV ═══════════════ */
+        /* ══════════════════════════════════════
+           NAVIGATION
+        ══════════════════════════════════════ */
         .nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 500;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 40px;
-            background: rgba(6,8,13,0.75);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            transition: background 0.3s;
+            padding: 0 48px;
+            height: 64px;
+            background: rgba(244,243,240,0.82);
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .nav.scrolled {
+            border-bottom-color: var(--border);
+            background: rgba(244,243,240,0.96);
         }
         .nav-logo {
             display: flex; align-items: center; gap: 10px;
-            font-weight: 700; font-size: 18px; color: var(--text);
-            text-decoration: none;
+            font-weight: 700; font-size: 17px; color: var(--text);
+            text-decoration: none; letter-spacing: -0.3px;
         }
-        .nav-logo svg {
-            width: 28px; height: 28px; stroke: var(--accent);
-            fill: none; stroke-width: 2;
+        .nav-logo-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            background: var(--text);
+            display: flex; align-items: center; justify-content: center;
         }
-        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-logo-icon svg { stroke: var(--bg); fill: none; stroke-width: 2.2; }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
         .nav-links a {
             color: var(--text-2); text-decoration: none; font-size: 14px;
-            font-weight: 500; transition: color 0.2s;
+            font-weight: 500; padding: 8px 14px; border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
         }
-        .nav-links a:hover { color: var(--text); }
-        .nav-cta {
-            padding: 10px 24px; border-radius: 10px;
-            background: var(--accent); color: #fff;
-            font-size: 14px; font-weight: 600;
-            border: none; cursor: pointer;
-            transition: all 0.2s;
+        .nav-links a:hover { color: var(--text); background: rgba(0,0,0,0.05); }
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+        .btn-ghost {
+            padding: 9px 20px; border-radius: 10px;
+            background: transparent; border: 1px solid var(--border-md);
+            color: var(--text); font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
         }
-        .nav-cta:hover { background: #2563EB; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.3); }
+        .btn-ghost:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.2); }
+        .btn-solid {
+            padding: 9px 22px; border-radius: 10px;
+            background: var(--text); color: var(--bg);
+            font-size: 14px; font-weight: 600; border: none;
+            cursor: pointer; transition: all 0.22s; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-solid:hover { background: #1a1916; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 
-        /* ═══════════════ HERO ═══════════════ */
+        /* ══════════════════════════════════════
+           HERO
+        ══════════════════════════════════════ */
         .hero {
             position: relative;
             min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            padding: 120px 40px 80px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 120px 48px 80px;
             overflow: hidden;
         }
-        .hero::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: url('/static/img/hero-bg.png') center/cover no-repeat;
-            opacity: 0.15;
+        /* Gradient mesh background */
+        .hero-mesh {
+            position: absolute; inset: 0; pointer-events: none;
         }
-        .hero::after {
-            content: '';
-            position: absolute; bottom: 0; left: 0; right: 0; height: 200px;
-            background: linear-gradient(to top, var(--bg), transparent);
+        .mesh-blob {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px);
+            animation: blobFloat 8s ease-in-out infinite;
         }
+        .mb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(37,99,235,0.12), transparent 70%); top: -100px; right: -100px; animation-delay: 0s; }
+        .mb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(21,128,61,0.1), transparent 70%); bottom: 0; left: -80px; animation-delay: -4s; }
+        .mb-3 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%); top: 40%; left: 40%; animation-delay: -2s; }
+
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 15px) scale(0.97); }
+        }
+
         .hero-content {
             position: relative; z-index: 2;
-            text-align: center; max-width: 800px;
+            text-align: center; max-width: 860px;
         }
         .hero-badge {
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 6px 16px; border-radius: 100px;
-            background: rgba(59,130,246,0.1);
-            border: 1px solid rgba(59,130,246,0.2);
-            font-size: 12px; font-weight: 600; color: var(--accent);
-            margin-bottom: 28px;
-            animation: fadeInUp 0.6s ease-out;
+            padding: 6px 14px 6px 8px; border-radius: 100px;
+            background: var(--surface); border: 1px solid var(--border-md);
+            font-size: 12px; font-weight: 600; color: var(--text-2);
+            margin-bottom: 32px; box-shadow: var(--shadow);
+            opacity: 0; animation: fadeSlideUp 0.7s ease-out 0.1s forwards;
         }
-        .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+        .badge-dot {
+            width: 22px; height: 22px; border-radius: 6px;
+            background: var(--green-bg); display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+        }
         .hero h1 {
-            font-family: 'DM Serif Display', serif;
-            font-size: clamp(36px, 6vw, 68px);
-            line-height: 1.1;
-            margin-bottom: 24px;
-            animation: fadeInUp 0.6s ease-out 0.1s both;
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: clamp(44px, 7vw, 80px);
+            line-height: 1.05; letter-spacing: -2px;
+            margin-bottom: 24px; color: var(--text);
+            opacity: 0; animation: fadeSlideUp 0.7s ease-out 0.2s forwards;
         }
-        .hero h1 .gradient-text {
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .hero h1 em {
+            font-style: italic; color: var(--accent);
         }
-        .hero p {
+        .hero-sub {
             font-size: 18px; color: var(--text-2);
-            line-height: 1.7; max-width: 560px; margin: 0 auto 40px;
-            animation: fadeInUp 0.6s ease-out 0.2s both;
+            line-height: 1.7; max-width: 520px; margin: 0 auto 44px;
+            font-weight: 400;
+            opacity: 0; animation: fadeSlideUp 0.7s ease-out 0.3s forwards;
         }
         .hero-buttons {
-            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-            animation: fadeInUp 0.6s ease-out 0.3s both;
+            display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+            opacity: 0; animation: fadeSlideUp 0.7s ease-out 0.4s forwards;
         }
-        .btn-primary {
-            padding: 14px 32px; border-radius: 12px;
-            background: var(--accent); color: #fff;
-            font-size: 15px; font-weight: 600;
-            border: none; cursor: pointer;
-            transition: all 0.25s;
+        .btn-hero-primary {
+            padding: 16px 36px; border-radius: 14px;
+            background: var(--text); color: var(--bg);
+            font-size: 15px; font-weight: 700; border: none; cursor: pointer;
+            transition: all 0.25s; font-family: inherit;
             display: inline-flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
-        .btn-primary:hover { background: #2563EB; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(59,130,246,0.35); }
-        .btn-secondary {
-            padding: 14px 32px; border-radius: 12px;
-            background: var(--surface);
-            border: 1px solid var(--border); color: var(--text);
-            font-size: 15px; font-weight: 600; cursor: pointer;
-            transition: all 0.25s;
+        .btn-hero-primary:hover { background: #1a1916; transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.2); }
+        .btn-hero-primary svg { transition: transform 0.2s; }
+        .btn-hero-primary:hover svg { transform: translateX(3px); }
+        .btn-hero-secondary {
+            padding: 16px 32px; border-radius: 14px;
+            background: var(--surface); border: 1px solid var(--border-md);
+            color: var(--text); font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.25s; font-family: inherit;
+            box-shadow: var(--shadow);
         }
-        .btn-secondary:hover { background: var(--surface2); border-color: rgba(255,255,255,0.12); }
-        .hero-stats {
-            display: flex; justify-content: center; gap: 48px; margin-top: 56px;
-            animation: fadeInUp 0.6s ease-out 0.4s both;
-        }
-        .hero-stat-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 28px; font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero-stat-lbl { font-size: 12px; color: var(--text-3); margin-top: 4px; font-weight: 500; }
+        .btn-hero-secondary:hover { background: var(--bg2); border-color: rgba(0,0,0,0.18); transform: translateY(-2px); }
 
-        /* ═══════════════ FEATURES ═══════════════ */
-        .features {
-            padding: 100px 40px;
-            max-width: 1200px; margin: 0 auto;
+        /* Hero floating cards */
+        .hero-cards {
+            position: relative; z-index: 2;
+            margin-top: 72px; width: 100%; max-width: 1000px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px; align-items: start;
+            opacity: 0; animation: fadeSlideUp 0.8s ease-out 0.6s forwards;
         }
-        .section-label {
-            font-size: 12px; font-weight: 700; color: var(--accent);
-            text-transform: uppercase; letter-spacing: 2px;
-            text-align: center; margin-bottom: 16px;
-        }
-        .section-title {
-            font-family: 'DM Serif Display', serif;
-            font-size: 36px; text-align: center; margin-bottom: 16px;
-        }
-        .section-sub {
-            font-size: 16px; color: var(--text-2); text-align: center;
-            max-width: 500px; margin: 0 auto 64px; line-height: 1.6;
-        }
-        .features-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-        .feature-card {
+        .hc-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 16px; padding: 32px;
-            transition: all 0.3s;
+            border-radius: var(--r);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+            will-change: transform;
         }
-        .feature-card:hover {
-            border-color: rgba(59,130,246,0.2);
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        .hc-card:hover { box-shadow: var(--shadow-lg); }
+        .hc-main { padding: 24px; grid-column: 1 / 3; }
+        .hc-side { padding: 20px; }
+        .hc-side-2 { padding: 20px; }
+        .hc-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-3); margin-bottom: 12px;
         }
-        .feature-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 20px; font-size: 22px;
+        .hc-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px; font-weight: 600; color: var(--text);
+            letter-spacing: -1px;
         }
-        .fi-blue { background: rgba(59,130,246,0.12); }
-        .fi-green { background: rgba(34,197,94,0.12); }
-        .fi-cyan { background: rgba(34,211,238,0.12); }
-        .fi-purple { background: rgba(168,85,247,0.12); }
-        .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-        .feature-card p { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+        .hc-change {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 100px;
+            background: var(--green-bg); color: var(--green);
+            font-size: 12px; font-weight: 700; margin-top: 8px;
+        }
+        .hc-chart {
+            margin-top: 16px; height: 64px; position: relative; overflow: hidden;
+        }
+        .hc-chart svg { width: 100%; height: 100%; }
+        .hc-assets { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .hc-asset-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px;
+        }
+        .hc-asset-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .hc-asset-name { font-size: 12px; font-weight: 500; color: var(--text-2); flex: 1; }
+        .hc-asset-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--text); }
+        .hc-asset-bar { height: 4px; border-radius: 100px; background: var(--bg2); flex: 1; max-width: 80px; overflow: hidden; }
+        .hc-asset-fill { height: 100%; border-radius: 100px; }
 
-        /* ═══════════════ AUTH MODAL ═══════════════ */
+        /* mini donut */
+        .mini-donut-wrap { display: flex; align-items: center; justify-content: center; padding: 8px 0; }
+
+        /* notification card */
+        .hc-notif {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px; background: var(--bg); border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .hc-notif:last-child { margin-bottom: 0; }
+        .hc-notif-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .ni-green { background: var(--green-bg); }
+        .ni-blue { background: rgba(37,99,235,0.1); }
+        .ni-purple { background: rgba(124,58,237,0.1); }
+        .hc-notif-text { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+        .hc-notif-title { font-weight: 600; color: var(--text); font-size: 12px; margin-bottom: 1px; }
+
+        /* ══════════════════════════════════════
+           TRUST STRIP / MARQUEE
+        ══════════════════════════════════════ */
+        .trust-strip {
+            padding: 32px 0;
+            overflow: hidden;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .trust-inner {
+            display: flex; align-items: center;
+            gap: 0;
+            animation: marquee 28s linear infinite;
+            width: max-content;
+        }
+        .trust-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 48px;
+            font-size: 13px; font-weight: 600; color: var(--text-3);
+            white-space: nowrap;
+        }
+        .trust-item span { font-size: 18px; }
+        .trust-sep { width: 1px; height: 20px; background: var(--border-md); }
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* ══════════════════════════════════════
+           SECTION COMMONS
+        ══════════════════════════════════════ */
+        .section-wrap {
+            max-width: 1100px; margin: 0 auto; padding: 0 48px;
+        }
+        .section-eyebrow {
+            font-size: 12px; font-weight: 700; color: var(--accent);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 14px;
+        }
+        .section-eyebrow::before {
+            content: ''; width: 20px; height: 2px; background: var(--accent); border-radius: 2px;
+        }
+        .section-title {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: clamp(32px, 4.5vw, 52px);
+            line-height: 1.1; letter-spacing: -1.5px;
+            color: var(--text); margin-bottom: 18px;
+        }
+        .section-sub {
+            font-size: 17px; color: var(--text-2);
+            line-height: 1.7; max-width: 500px;
+        }
+
+        /* Reveal animations */
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal-left.visible { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal-right.visible { opacity: 1; transform: translateX(0); }
+        .reveal-scale { opacity: 0; transform: scale(0.94); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+        .reveal-scale.visible { opacity: 1; transform: scale(1); }
+        .stagger > * { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .stagger.visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0s; }
+        .stagger.visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.08s; }
+        .stagger.visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.16s; }
+        .stagger.visible > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.24s; }
+        .stagger.visible > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 0.32s; }
+        .stagger.visible > *:nth-child(6) { opacity: 1; transform: none; transition-delay: 0.40s; }
+
+        /* ══════════════════════════════════════
+           FEATURES — BENTO GRID
+        ══════════════════════════════════════ */
+        .features-section {
+            padding: 120px 0;
+        }
+        .features-header {
+            margin-bottom: 60px;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: auto auto;
+            gap: 16px;
+        }
+        .bento-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            position: relative; overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s, border-color 0.3s;
+            cursor: default;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(0,0,0,0.12);
+        }
+        /* Shimmer overlay */
+        .bento-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(37,99,235,0.04), transparent 40%);
+            opacity: 0; transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .bento-card:hover::after { opacity: 1; }
+
+        .bc-1 { grid-column: 1 / 8; }
+        .bc-2 { grid-column: 8 / 13; }
+        .bc-3 { grid-column: 1 / 5; }
+        .bc-4 { grid-column: 5 / 9; }
+        .bc-5 { grid-column: 9 / 13; }
+
+        .bento-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 20px;
+        }
+        .bi-blue { background: rgba(37,99,235,0.1); }
+        .bi-green { background: rgba(21,128,61,0.1); }
+        .bi-purple { background: rgba(124,58,237,0.1); }
+        .bi-cyan { background: rgba(8,145,178,0.1); }
+        .bi-orange { background: rgba(234,88,12,0.1); }
+
+        .bento-card h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 10px; }
+        .bento-card p { font-size: 14px; color: var(--text-2); line-height: 1.65; max-width: 380px; }
+
+        /* inline visual elements in bento cards */
+        .bento-visual { margin-top: 24px; }
+        .portfolio-bars { display: flex; flex-direction: column; gap: 10px; }
+        .pb-row { display: flex; align-items: center; gap: 12px; }
+        .pb-label { font-size: 12px; font-weight: 500; color: var(--text-2); width: 60px; flex-shrink: 0; }
+        .pb-bar { flex: 1; height: 8px; background: var(--bg2); border-radius: 100px; overflow: hidden; }
+        .pb-fill { height: 100%; border-radius: 100px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+        .pb-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text); width: 52px; text-align: right; flex-shrink: 0; }
+
+        .bank-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+        .bank-pill {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 100px;
+            background: var(--bg); border: 1px solid var(--border-md);
+            font-size: 12px; font-weight: 600; color: var(--text-2);
+        }
+        .bank-pill span { font-size: 16px; }
+
+        .ai-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+        .ai-tag {
+            padding: 4px 12px; border-radius: 100px;
+            font-size: 11px; font-weight: 600;
+        }
+        .at-green { background: var(--green-bg); color: var(--green); }
+        .at-blue { background: rgba(37,99,235,0.1); color: var(--accent); }
+        .at-purple { background: rgba(124,58,237,0.1); color: var(--purple); }
+        .at-orange { background: rgba(234,88,12,0.1); color: #EA580C; }
+
+        .ret-progress {
+            margin-top: 20px;
+        }
+        .ret-bar-wrap { background: var(--bg2); border-radius: 100px; height: 10px; overflow: hidden; margin: 10px 0 8px; }
+        .ret-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), #22C55E); width: 0; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+        .ret-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-3); font-weight: 500; }
+
+        /* ══════════════════════════════════════
+           HOW IT WORKS
+        ══════════════════════════════════════ */
+        .how-section {
+            padding: 120px 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .how-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 2px; margin-top: 64px; position: relative;
+        }
+        .how-step {
+            padding: 40px 36px;
+            position: relative;
+        }
+        .how-step:not(:last-child)::after {
+            content: '';
+            position: absolute; right: -1px; top: 32px; bottom: 32px;
+            width: 1px; background: var(--border);
+        }
+        .how-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 600; color: var(--text-3);
+            letter-spacing: 1px; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .how-num::before {
+            content: '';
+            display: block; width: 28px; height: 28px;
+            border-radius: 50%; background: var(--bg);
+            border: 1px solid var(--border-md);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .how-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--text); color: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; flex-shrink: 0;
+        }
+        .how-step h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 10px; }
+        .how-step p { font-size: 14px; color: var(--text-2); line-height: 1.65; }
+        .how-step-icon { font-size: 32px; margin-bottom: 20px; }
+
+        /* ══════════════════════════════════════
+           STATS
+        ══════════════════════════════════════ */
+        .stats-section {
+            padding: 120px 0;
+        }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 2px; margin-top: 64px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 20px; overflow: hidden;
+        }
+        .stat-cell {
+            padding: 52px 48px;
+            background: var(--surface);
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .stat-cell:hover { background: var(--bg); }
+        .stat-val {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: 56px; letter-spacing: -2px; line-height: 1;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .stat-val .accent { color: var(--accent); }
+        .stat-lbl {
+            font-size: 14px; color: var(--text-2); font-weight: 500;
+        }
+
+        /* ══════════════════════════════════════
+           TESTIMONIAL / QUOTE SECTION
+        ══════════════════════════════════════ */
+        .quote-section {
+            padding: 80px 0;
+            background: var(--text);
+            overflow: hidden;
+        }
+        .quote-inner {
+            max-width: 800px; margin: 0 auto; padding: 0 48px;
+            text-align: center;
+        }
+        .quote-mark { font-size: 80px; line-height: 1; color: rgba(255,255,255,0.1); font-family: Georgia, serif; margin-bottom: -20px; }
+        .quote-text {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: clamp(22px, 3vw, 36px); letter-spacing: -0.8px;
+            color: #F4F3F0; line-height: 1.4; margin-bottom: 32px;
+        }
+        .quote-author {
+            font-size: 13px; color: rgba(244,243,240,0.5); font-weight: 500;
+        }
+
+        /* ══════════════════════════════════════
+           CTA SECTION
+        ══════════════════════════════════════ */
+        .cta-section {
+            padding: 120px 0;
+        }
+        .cta-card {
+            background: var(--text);
+            border-radius: 28px;
+            padding: 80px 64px;
+            text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .cta-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(37,99,235,0.25), transparent 60%),
+                        radial-gradient(ellipse at 70% 50%, rgba(21,128,61,0.15), transparent 60%);
+            pointer-events: none;
+        }
+        .cta-card h2 {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: clamp(36px, 5vw, 60px); letter-spacing: -2px;
+            color: #F4F3F0; margin-bottom: 18px; position: relative; z-index: 1;
+        }
+        .cta-card p {
+            font-size: 17px; color: rgba(244,243,240,0.6);
+            line-height: 1.6; max-width: 460px; margin: 0 auto 44px;
+            position: relative; z-index: 1;
+        }
+        .cta-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+        .btn-cta-primary {
+            padding: 16px 36px; border-radius: 14px;
+            background: #F4F3F0; color: var(--text);
+            font-size: 15px; font-weight: 700; border: none;
+            cursor: pointer; transition: all 0.25s; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-cta-primary:hover { background: #fff; transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+        .btn-cta-secondary {
+            padding: 16px 32px; border-radius: 14px;
+            background: transparent; border: 1px solid rgba(244,243,240,0.2);
+            color: rgba(244,243,240,0.8); font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.25s; font-family: inherit;
+        }
+        .btn-cta-secondary:hover { background: rgba(244,243,240,0.08); border-color: rgba(244,243,240,0.35); }
+
+        /* ══════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════ */
+        .footer {
+            padding: 48px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 20px;
+            background: var(--surface);
+        }
+        .footer-logo {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 15px; color: var(--text);
+            text-decoration: none;
+        }
+        .footer-logo-icon {
+            width: 28px; height: 28px; border-radius: 7px;
+            background: var(--text);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .footer-logo-icon svg { stroke: var(--bg); fill: none; stroke-width: 2.2; width: 14px; height: 14px; }
+        .footer-copy { font-size: 13px; color: var(--text-3); }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { font-size: 13px; color: var(--text-3); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text-2); }
+
+        /* ══════════════════════════════════════
+           AUTH MODAL
+        ══════════════════════════════════════ */
         .auth-overlay {
-            position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.7);
+            position: fixed; inset: 0; z-index: 999;
+            background: rgba(14,13,11,0.5);
             backdrop-filter: blur(8px);
             display: none; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.3s;
@@ -210,192 +605,517 @@
         .auth-overlay.visible { display: flex; opacity: 1; }
         .auth-card {
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px; padding: 40px;
-            width: 420px; max-width: 90vw;
+            border: 1px solid var(--border-md);
+            border-radius: 24px; padding: 44px;
+            width: 420px; max-width: 92vw;
             position: relative;
-            animation: scaleIn 0.3s ease-out;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.15);
+            animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
         .auth-close {
-            position: absolute; top: 16px; right: 16px;
-            background: none; border: none; color: var(--text-3);
-            font-size: 22px; cursor: pointer; width: 32px; height: 32px;
+            position: absolute; top: 18px; right: 18px;
+            background: var(--bg); border: 1px solid var(--border);
+            color: var(--text-2); width: 30px; height: 30px;
+            border-radius: 8px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; transition: all 0.2s;
+            font-size: 18px; transition: all 0.2s;
         }
-        .auth-close:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-        .auth-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+        .auth-close:hover { background: var(--bg2); color: var(--text); }
+        .auth-title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 4px; }
         .auth-sub { font-size: 13px; color: var(--text-3); margin-bottom: 28px; }
         .auth-google {
-            width: 100%; padding: 12px; border-radius: 10px;
-            background: #fff; color: #1a1a1a;
-            font-size: 14px; font-weight: 600;
-            border: none; cursor: pointer;
+            width: 100%; padding: 13px; border-radius: 12px;
+            background: var(--bg); border: 1px solid var(--border-md);
+            color: var(--text); font-size: 14px; font-weight: 600;
+            cursor: pointer; font-family: inherit;
             display: flex; align-items: center; justify-content: center; gap: 10px;
             transition: all 0.2s;
         }
-        .auth-google:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .auth-google:hover { background: var(--bg2); border-color: rgba(0,0,0,0.18); transform: translateY(-1px); box-shadow: var(--shadow); }
         .auth-divider {
             display: flex; align-items: center; gap: 16px;
-            margin: 24px 0; color: var(--text-3); font-size: 12px;
+            margin: 20px 0; color: var(--text-3); font-size: 12px;
         }
-        .auth-divider::before, .auth-divider::after {
-            content: ''; flex: 1; height: 1px; background: var(--border);
-        }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
         .auth-input {
-            width: 100%; padding: 12px 16px; border-radius: 10px;
-            background: var(--bg2); border: 1px solid var(--border);
-            color: var(--text); font-size: 14px;
-            font-family: inherit; margin-bottom: 12px;
-            transition: border-color 0.2s;
+            width: 100%; padding: 12px 14px; border-radius: 10px;
+            background: var(--bg); border: 1px solid var(--border-md);
+            color: var(--text); font-size: 14px; font-family: inherit;
+            margin-bottom: 10px; transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .auth-input:focus { outline: none; border-color: var(--accent); }
+        .auth-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
         .auth-input::placeholder { color: var(--text-3); }
         .auth-submit {
-            width: 100%; padding: 13px; border-radius: 10px;
-            background: var(--accent); color: #fff;
-            font-size: 14px; font-weight: 600;
-            border: none; cursor: pointer; margin-top: 8px;
-            transition: all 0.2s;
+            width: 100%; padding: 13px; border-radius: 12px;
+            background: var(--text); color: var(--bg);
+            font-size: 14px; font-weight: 700; border: none;
+            cursor: pointer; margin-top: 8px; font-family: inherit;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .auth-submit:hover { background: #2563EB; }
-        .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-        .auth-toggle {
-            text-align: center; margin-top: 20px;
-            font-size: 13px; color: var(--text-3);
-        }
-        .auth-toggle a {
-            color: var(--accent); text-decoration: none; font-weight: 600;
-            cursor: pointer;
-        }
+        .auth-submit:hover { background: #1a1916; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .auth-toggle { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-3); }
+        .auth-toggle a { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: none; }
         .auth-toggle a:hover { text-decoration: underline; }
         .auth-error {
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.2);
-            color: #F87171; border-radius: 8px;
-            padding: 10px 14px; font-size: 13px;
-            margin-bottom: 16px; display: none;
+            background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.15);
+            color: var(--red); border-radius: 10px; padding: 10px 14px;
+            font-size: 13px; margin-bottom: 16px; display: none; border-radius: 10px;
         }
 
-        /* ═══════════════ FOOTER ═══════════════ */
-        .footer {
-            padding: 40px;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            font-size: 13px; color: var(--text-3);
-        }
-
-        /* ═══════════════ ANIMATIONS ═══════════════ */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(24px); }
+        /* ══════════════════════════════════════
+           ANIMATIONS
+        ══════════════════════════════════════ */
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(28px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: scale(0.94) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .glow-orb {
-            position: absolute; border-radius: 50%;
-            filter: blur(100px); opacity: 0.15;
-            animation: float 6s ease-in-out infinite;
-        }
-        .glow-1 { width: 400px; height: 400px; background: #3B82F6; top: 10%; left: 20%; }
-        .glow-2 { width: 300px; height: 300px; background: #22C55E; top: 60%; right: 15%; animation-delay: -3s; }
-
-        /* ═══════════════ RESPONSIVE ═══════════════ */
-        @media (max-width: 768px) {
-            .nav { padding: 12px 20px; }
-            .nav-links { display: none; }
-            .hero { padding: 100px 20px 60px; }
-            .hero-stats { gap: 24px; flex-wrap: wrap; }
-            .features { padding: 60px 20px; }
-            .feature-card { padding: 24px; }
-        }
-
-        /* Loading spinner */
-        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes lineGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(244,243,240,0.3); border-top-color: var(--bg);
+            border-radius: 50%; animation: spin 0.6s linear infinite; display: none;
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+        @media (max-width: 900px) {
+            .nav { padding: 0 20px; height: 56px; }
+            .nav-links { display: none; }
+            .nav-right .btn-ghost { display: none; }
+            .btn-solid { padding: 8px 16px; font-size: 13px; }
+            .hero { padding: 90px 20px 48px; min-height: auto; }
+            .hero h1 { font-size: clamp(32px, 9vw, 52px); letter-spacing: -1px; }
+            .hero-sub { font-size: 15px; margin-bottom: 32px; }
+            .hero-buttons { flex-direction: column; align-items: stretch; }
+            .btn-hero-primary, .btn-hero-secondary { justify-content: center; padding: 14px 24px; }
+            .hero-cards { grid-template-columns: 1fr; margin-top: 40px; }
+            .hc-main { grid-column: 1; }
+            .hc-side-2 { grid-column: 1 !important; }
+            .section-wrap { padding: 0 20px; }
+            .features-section { padding: 72px 0; }
+            .bento-grid { grid-template-columns: 1fr; }
+            .bc-1,.bc-2,.bc-3,.bc-4,.bc-5 { grid-column: 1; }
+            .bento-card { padding: 24px 20px; }
+            .how-section { padding: 72px 0; }
+            .how-grid { grid-template-columns: 1fr; gap: 0; }
+            .how-step { padding: 28px 20px; }
+            .how-step:not(:last-child)::after { display: none; }
+            .stats-section { padding: 72px 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .stat-cell { padding: 32px 28px; }
+            .stat-val { font-size: 44px; }
+            .cta-section { padding: 72px 0; }
+            .cta-card { padding: 48px 24px; border-radius: 20px; }
+            .footer { flex-direction: column; align-items: flex-start; padding: 32px 20px; gap: 16px; }
+            .footer-links { flex-wrap: wrap; gap: 16px; }
+            .trust-item { padding: 0 28px; }
+        }
     </style>
 </head>
 <body>
-    <!-- Glow orbs -->
-    <div class="glow-orb glow-1"></div>
-    <div class="glow-orb glow-2"></div>
-
     <!-- NAV -->
-    <nav class="nav">
+    <nav class="nav" id="main-nav">
         <a href="/" class="nav-logo">
-            <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <div class="nav-logo-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
             TrackWealth
         </a>
         <div class="nav-links">
-            <a href="#features">Funcionalidades</a>
-            <a href="#" onclick="openAuth('login')">Iniciar Sesión</a>
-            <button class="nav-cta" onclick="openAuth('register')">Empezar Gratis</button>
+            <a href="#features">Funciones</a>
+            <a href="#how">Cómo funciona</a>
+        </div>
+        <div class="nav-right">
+            <button class="btn-ghost" onclick="openAuth('login')">Iniciar sesión</button>
+            <button class="btn-solid" onclick="openAuth('register')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Empezar gratis
+            </button>
         </div>
     </nav>
 
     <!-- HERO -->
-    <section class="hero">
+    <section class="hero" id="hero">
+        <div class="hero-mesh">
+            <div class="mesh-blob mb-1"></div>
+            <div class="mesh-blob mb-2"></div>
+            <div class="mesh-blob mb-3"></div>
+        </div>
+
         <div class="hero-content">
-            <div class="hero-badge"><span class="dot"></span> 100% gratuito · Sin tarjeta de crédito</div>
-            <h1>Tu patrimonio,<br><span class="gradient-text">bajo control total</span></h1>
-            <p>Centraliza inversiones, cuentas bancarias y gastos en un dashboard premium. Importa movimientos de Santander, Revolut y Edenred con un click.</p>
-            <div class="hero-buttons">
-                <button class="btn-primary" onclick="openAuth('register')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    Crear cuenta gratuita
-                </button>
-                <button class="btn-secondary" onclick="openAuth('login')">Ya tengo cuenta</button>
+            <div class="hero-badge">
+                <div class="badge-dot">✦</div>
+                100% gratuito · Sin tarjeta de crédito · Para siempre
             </div>
-            <div class="hero-stats">
-                <div><div class="hero-stat-val">∞</div><div class="hero-stat-lbl">Activos ilimitados</div></div>
-                <div><div class="hero-stat-val">3+</div><div class="hero-stat-lbl">Bancos soportados</div></div>
-                <div><div class="hero-stat-val">0€</div><div class="hero-stat-lbl">Para siempre</div></div>
+            <h1>Gestiona tu<br>patrimonio con <em>claridad</em></h1>
+            <p class="hero-sub">
+                Centraliza inversiones, cuentas bancarias y gastos en un dashboard personal.
+                Importa movimientos de más de 19 bancos, precios en tiempo real y simulador de jubilación.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn-hero-primary" onclick="openAuth('register')">
+                    Crear cuenta gratis
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+                <button class="btn-hero-secondary" onclick="openAuth('login')">Ya tengo cuenta</button>
+            </div>
+        </div>
+
+        <!-- Floating dashboard mockup cards -->
+        <div class="hero-cards" id="hero-cards">
+            <!-- Main portfolio card -->
+            <div class="hc-card hc-main" data-tilt>
+                <div class="hc-label">Patrimonio total</div>
+                <div class="hc-value" id="hero-val">€128,430</div>
+                <div class="hc-change">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                    +12.4% este año
+                </div>
+                <div class="hc-chart">
+                    <svg viewBox="0 0 300 64" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="rgba(37,99,235,0.15)"/>
+                                <stop offset="100%" stop-color="rgba(37,99,235,0)"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,50 L20,46 L40,48 L60,40 L80,38 L100,32 L120,28 L140,30 L160,22 L180,18 L200,20 L220,14 L240,10 L260,8 L280,4 L300,2"
+                              fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M0,50 L20,46 L40,48 L60,40 L80,38 L100,32 L120,28 L140,30 L160,22 L180,18 L200,20 L220,14 L240,10 L260,8 L280,4 L300,2 L300,64 L0,64 Z"
+                              fill="url(#chartGrad)"/>
+                    </svg>
+                </div>
+                <div class="hc-assets">
+                    <div class="hc-asset-row">
+                        <div class="hc-asset-dot" style="background:#059669"></div>
+                        <div class="hc-asset-name">ETFs</div>
+                        <div class="hc-asset-bar"><div class="hc-asset-fill" style="width:68%;background:#059669"></div></div>
+                        <div class="hc-asset-val">€87.3k</div>
+                    </div>
+                    <div class="hc-asset-row">
+                        <div class="hc-asset-dot" style="background:var(--accent)"></div>
+                        <div class="hc-asset-name">Fondos</div>
+                        <div class="hc-asset-bar"><div class="hc-asset-fill" style="width:22%;background:var(--accent)"></div></div>
+                        <div class="hc-asset-val">€28.2k</div>
+                    </div>
+                    <div class="hc-asset-row">
+                        <div class="hc-asset-dot" style="background:var(--purple)"></div>
+                        <div class="hc-asset-name">Crypto</div>
+                        <div class="hc-asset-bar"><div class="hc-asset-fill" style="width:10%;background:var(--purple)"></div></div>
+                        <div class="hc-asset-val">€12.9k</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side card: Sync status -->
+            <div class="hc-card hc-side" data-tilt>
+                <div class="hc-label">Últimas sincronizaciones</div>
+                <div class="hc-notif">
+                    <div class="hc-notif-icon ni-green">🏦</div>
+                    <div class="hc-notif-text">
+                        <div class="hc-notif-title">Santander</div>
+                        12 transacciones · hace 2h
+                    </div>
+                </div>
+                <div class="hc-notif">
+                    <div class="hc-notif-icon ni-blue">💳</div>
+                    <div class="hc-notif-text">
+                        <div class="hc-notif-title">Revolut</div>
+                        4 transacciones · hace 5h
+                    </div>
+                </div>
+                <div class="hc-notif">
+                    <div class="hc-notif-icon ni-purple">🎴</div>
+                    <div class="hc-notif-text">
+                        <div class="hc-notif-title">Edenred</div>
+                        2 transacciones · ayer
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom row: AI insight -->
+            <div class="hc-card hc-side-2" data-tilt style="grid-column:1/4;padding:20px 24px;">
+                <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:10px;flex:1;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:rgba(37,99,235,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🤖</div>
+                        <div>
+                            <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Insight IA</div>
+                            <div style="font-size:13px;font-weight:500;color:var(--text);">Tu gasto en restaurantes subió un 23% este mes. Tu TIR acumulada es <strong style="color:var(--green)">+8.7%</strong> anualizada.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <span style="padding:4px 10px;background:var(--green-bg);color:var(--green);border-radius:100px;font-size:11px;font-weight:700;">+8.7% TIR</span>
+                        <span style="padding:4px 10px;background:rgba(37,99,235,0.1);color:var(--accent);border-radius:100px;font-size:11px;font-weight:700;">Jubilación: 2047</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- FEATURES -->
-    <section class="features" id="features">
-        <div class="section-label">Funcionalidades</div>
-        <h2 class="section-title">Todo lo que necesitas para gestionar tu dinero</h2>
-        <p class="section-sub">Sin hojas de cálculo. Sin complicaciones. Solo tu patrimonio en tiempo real.</p>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon fi-blue">📊</div>
-                <h3>Portfolio en tiempo real</h3>
-                <p>Tracking automático de ETFs, acciones, criptomonedas y fondos indexados con precios actualizados de Yahoo Finance y CoinGecko.</p>
+    <!-- TRUST STRIP -->
+    <div class="trust-strip">
+        <div class="trust-inner" id="trust-inner">
+            <div class="trust-item"><span>🏦</span> Santander</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🏦</span> BBVA</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🏦</span> CaixaBank</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>💳</span> Revolut</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>💳</span> N26</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>💸</span> Wise</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🏦</span> ING</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🎴</span> Edenred</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>📈</span> Trade Republic</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>📈</span> Yahoo Finance</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🪙</span> CoinGecko</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🔮</span> Indexa Capital</div>
+            <div class="trust-sep"></div>
+            <!-- duplicate for seamless loop -->
+            <div class="trust-item"><span>🏦</span> Santander</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🏦</span> BBVA</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🏦</span> CaixaBank</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>💳</span> Revolut</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>💳</span> N26</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>💸</span> Wise</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🏦</span> ING</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🎴</span> Edenred</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>📈</span> Trade Republic</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>📈</span> Yahoo Finance</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🪙</span> CoinGecko</div>
+            <div class="trust-sep"></div>
+            <div class="trust-item"><span>🔮</span> Indexa Capital</div>
+        </div>
+    </div>
+
+    <!-- FEATURES BENTO -->
+    <section class="features-section" id="features">
+        <div class="section-wrap">
+            <div class="features-header reveal">
+                <div class="section-eyebrow">Funcionalidades</div>
+                <h2 class="section-title">Todo tu dinero,<br>en un solo lugar</h2>
+                <p class="section-sub">Sin hojas de cálculo. Sin complicaciones. Solo tu patrimonio en tiempo real, con la potencia de la IA.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon fi-green">🏦</div>
-                <h3>Multi-banco integrado</h3>
-                <p>Importa movimientos de Banco Santander, Revolut y Edenred. Categoriza gastos automáticamente con IA.</p>
+
+            <div class="bento-grid stagger">
+                <!-- Big card: Portfolio -->
+                <div class="bento-card bc-1">
+                    <div class="bento-icon bi-blue">📊</div>
+                    <h3>Portfolio en tiempo real</h3>
+                    <p>Tracking automático de ETFs, acciones, criptomonedas y fondos indexados. Precios actualizados desde Yahoo Finance y CoinGecko en cada visita.</p>
+                    <div class="bento-visual">
+                        <div class="portfolio-bars">
+                            <div class="pb-row">
+                                <div class="pb-label">ETFs</div>
+                                <div class="pb-bar"><div class="pb-fill" style="width:0%;background:#059669" data-w="68"></div></div>
+                                <div class="pb-val">68%</div>
+                            </div>
+                            <div class="pb-row">
+                                <div class="pb-label">Fondos</div>
+                                <div class="pb-bar"><div class="pb-fill" style="width:0%;background:var(--accent)" data-w="22"></div></div>
+                                <div class="pb-val">22%</div>
+                            </div>
+                            <div class="pb-row">
+                                <div class="pb-label">Crypto</div>
+                                <div class="pb-bar"><div class="pb-fill" style="width:0%;background:var(--purple)" data-w="10"></div></div>
+                                <div class="pb-val">10%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-banco -->
+                <div class="bento-card bc-2">
+                    <div class="bento-icon bi-green">🏦</div>
+                    <h3>19+ bancos integrados</h3>
+                    <p>Importa movimientos de Santander, BBVA, CaixaBank, Revolut, N26, Wise y muchos más. Categorización automática con IA.</p>
+                    <div class="bento-visual">
+                        <div class="bank-pills">
+                            <div class="bank-pill"><span>🏦</span>Santander</div>
+                            <div class="bank-pill"><span>🏦</span>BBVA</div>
+                            <div class="bank-pill"><span>💳</span>Revolut</div>
+                            <div class="bank-pill"><span>💳</span>N26</div>
+                            <div class="bank-pill"><span>💸</span>Wise</div>
+                            <div class="bank-pill"><span>📈</span>Trade Republic</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IA -->
+                <div class="bento-card bc-3">
+                    <div class="bento-icon bi-purple">🤖</div>
+                    <h3>IA Financiera</h3>
+                    <p>Análisis automático de patrones de gasto e insights accionables cada semana.</p>
+                    <div class="bento-visual">
+                        <div class="ai-tags">
+                            <span class="ai-tag at-green">Ahorro +8%</span>
+                            <span class="ai-tag at-blue">TIR 8.7%</span>
+                            <span class="ai-tag at-orange">Restaurantes ↑23%</span>
+                            <span class="ai-tag at-purple">FIRE 2047</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jubilación -->
+                <div class="bento-card bc-4">
+                    <div class="bento-icon bi-cyan">🔮</div>
+                    <h3>Simulador de Jubilación</h3>
+                    <p>Proyecta tu patrimonio con múltiples escenarios. Visualiza tu libertad financiera.</p>
+                    <div class="bento-visual ret-progress">
+                        <div style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Meta: €500k en 2047</div>
+                        <div class="ret-bar-wrap"><div class="ret-bar-fill" id="ret-bar"></div></div>
+                        <div class="ret-labels"><span>Hoy: €128k</span><span>26% completado</span></div>
+                    </div>
+                </div>
+
+                <!-- Privacidad -->
+                <div class="bento-card bc-5">
+                    <div class="bento-icon bi-orange">🔒</div>
+                    <h3>100% Privado</h3>
+                    <p>Tus datos son tuyos. Firebase con autenticación segura. Sin acceso a cuentas bancarias.</p>
+                    <div class="bento-visual">
+                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+                            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);">
+                                <span style="width:6px;height:6px;border-radius:50%;background:var(--green-2);flex-shrink:0;"></span>
+                                Cifrado en tránsito (HTTPS)
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);">
+                                <span style="width:6px;height:6px;border-radius:50%;background:var(--green-2);flex-shrink:0;"></span>
+                                Autenticación Firebase
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);">
+                                <span style="width:6px;height:6px;border-radius:50%;background:var(--green-2);flex-shrink:0;"></span>
+                                Sin acceso a banca online
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon fi-cyan">🤖</div>
-                <h3>Inteligencia Financiera IA</h3>
-                <p>Análisis automático de tus patrones de gasto, insights accionables y recomendaciones personalizadas de tu portfolio.</p>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-section" id="how">
+        <div class="section-wrap">
+            <div class="reveal" style="text-align:center;margin-bottom:0;">
+                <div class="section-eyebrow" style="justify-content:center;">Cómo funciona</div>
+                <h2 class="section-title" style="text-align:center;">En marcha en 3 minutos</h2>
+                <p class="section-sub" style="margin:0 auto;text-align:center;">Sin configuración compleja. Sin conectar tus credenciales bancarias.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon fi-purple">🔮</div>
-                <h3>Simulador de Jubilación</h3>
-                <p>Proyecta tu patrimonio futuro con múltiples escenarios de ahorro e inversión. Visualiza cuándo alcanzarás la libertad financiera.</p>
+            <div class="how-grid stagger">
+                <div class="how-step">
+                    <div class="how-step-icon">📋</div>
+                    <div class="how-step-num">01</div>
+                    <h3>Crea tu cuenta</h3>
+                    <p>Regístrate con Google o email en 30 segundos. Crea tu portfolio y añade tus activos manualmente o importa desde DeGiro e Indexa.</p>
+                </div>
+                <div class="how-step">
+                    <div class="how-step-icon">📂</div>
+                    <div class="how-step-num">02</div>
+                    <h3>Importa tus movimientos</h3>
+                    <p>Descarga el CSV de tu banco y súbelo con un click. El parser inteligente reconoce el formato de Santander, Revolut y Edenred automáticamente.</p>
+                </div>
+                <div class="how-step">
+                    <div class="how-step-icon">🚀</div>
+                    <div class="how-step-num">03</div>
+                    <h3>Analiza y decide</h3>
+                    <p>Tu dashboard se actualiza en tiempo real con los precios actuales. La IA analiza tus patrones y te da insights accionables cada semana.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats-section">
+        <div class="section-wrap">
+            <div class="reveal" style="text-align:center;margin-bottom:0;">
+                <div class="section-eyebrow" style="justify-content:center;">Números</div>
+                <h2 class="section-title" style="text-align:center;">Construido para durar</h2>
+            </div>
+            <div class="stats-grid reveal">
+                <div class="stat-cell">
+                    <div class="stat-val"><span class="count" data-target="0" data-symbol="∞">∞</span></div>
+                    <div class="stat-lbl">Activos ilimitados en tu portfolio</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-val"><span class="count" data-target="19" data-symbol="+">0</span><span class="accent">+</span></div>
+                    <div class="stat-lbl">Bancos y brokers integrados</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-val"><span class="count" data-target="0" data-symbol="0€">0<span class="accent">€</span></span></div>
+                    <div class="stat-lbl">Para siempre. Gratis. Sin trampas.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUOTE -->
+    <section class="quote-section reveal">
+        <div class="quote-inner">
+            <div class="quote-mark">"</div>
+            <p class="quote-text">El mejor momento para empezar a gestionar tu patrimonio fue hace 10 años. El segundo mejor momento es ahora.</p>
+            <div class="quote-author">— Principio de inversión inteligente</div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="section-wrap">
+            <div class="cta-card reveal-scale">
+                <h2>Empieza hoy,<br>gratis para siempre</h2>
+                <p>Sin tarjeta de crédito. Sin sorpresas. Tu patrimonio bajo control en 3 minutos.</p>
+                <div class="cta-buttons">
+                    <button class="btn-cta-primary" onclick="openAuth('register')">
+                        Crear mi cuenta gratis
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <button class="btn-cta-secondary" onclick="openAuth('login')">Ya tengo cuenta</button>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="footer">
-        <p>© 2026 TrackWealth — Hecho con ❤️ para gestionar tu patrimonio inteligentemente</p>
+        <a href="/" class="footer-logo">
+            <div class="footer-logo-icon">
+                <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            TrackWealth
+        </a>
+        <div class="footer-copy">© 2026 TrackWealth — Hecho con ❤️ para gestionar tu patrimonio</div>
+        <div class="footer-links">
+            <a href="#features">Funciones</a>
+            <a href="#how">Cómo funciona</a>
+            <a href="mailto:alexduli98@gmail.com">Contacto</a>
+        </div>
     </footer>
 
     <!-- AUTH MODAL -->
@@ -404,16 +1124,12 @@
             <button class="auth-close" onclick="closeAuth()">×</button>
             <div id="auth-title" class="auth-title">Crear tu cuenta</div>
             <div id="auth-sub" class="auth-sub">Empieza a gestionar tu patrimonio en segundos</div>
-            
             <div class="auth-error" id="auth-error"></div>
-
             <button class="auth-google" onclick="signInWithGoogle()">
                 <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 Continuar con Google
             </button>
-
             <div class="auth-divider">o con email</div>
-
             <form id="auth-form" onsubmit="event.preventDefault(); handleEmailAuth()">
                 <input type="text" id="auth-name" class="auth-input" placeholder="Tu nombre" style="display:none">
                 <input type="email" id="auth-email" class="auth-input" placeholder="tu@email.com" required>
@@ -423,7 +1139,6 @@
                     <div class="spinner" id="auth-spinner"></div>
                 </button>
             </form>
-
             <div class="auth-toggle" id="auth-toggle">
                 ¿Ya tienes cuenta? <a onclick="switchAuthMode('login')">Inicia sesión</a>
             </div>
@@ -434,114 +1149,221 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
     <script>
-        // Firebase config
-        const firebaseConfig = {
-          apiKey: "AIzaSyCD0-0hj4PagQthwBlo_5RcMXhYHjag0xs",
-          authDomain: "wealthtracker-d2a0d.firebaseapp.com",
-          projectId: "wealthtracker-d2a0d",
-          storageBucket: "wealthtracker-d2a0d.firebasestorage.app",
-          messagingSenderId: "522194848214",
-          appId: "1:522194848214:web:e6592a18c7b3b06365fc77",
-          measurementId: "G-41GWKKRN5D"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+    /* ════════════════════════════════════════
+       FIREBASE
+    ════════════════════════════════════════ */
+    const firebaseConfig = {
+        apiKey: "AIzaSyCD0-0hj4PagQthwBlo_5RcMXhYHjag0xs",
+        authDomain: "wealthtracker-d2a0d.firebaseapp.com",
+        projectId: "wealthtracker-d2a0d",
+        storageBucket: "wealthtracker-d2a0d.firebasestorage.app",
+        messagingSenderId: "522194848214",
+        appId: "1:522194848214:web:e6592a18c7b3b06365fc77",
+        measurementId: "G-41GWKKRN5D"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    let authMode = 'register';
 
-        let authMode = 'register'; // 'login' or 'register'
-
-        function openAuth(mode) {
-            authMode = mode;
-            const overlay = document.getElementById('auth-overlay');
-            overlay.style.display = 'flex';
-            requestAnimationFrame(() => overlay.classList.add('visible'));
-            updateAuthUI();
-        }
-
-        function closeAuth() {
-            const overlay = document.getElementById('auth-overlay');
-            overlay.classList.remove('visible');
-            setTimeout(() => overlay.style.display = 'none', 300);
-            document.getElementById('auth-error').style.display = 'none';
-        }
-
-        function switchAuthMode(mode) {
-            authMode = mode;
-            updateAuthUI();
-        }
-
-        function updateAuthUI() {
-            const isRegister = authMode === 'register';
-            document.getElementById('auth-title').textContent = isRegister ? 'Crear tu cuenta' : 'Bienvenido de vuelta';
-            document.getElementById('auth-sub').textContent = isRegister ? 'Empieza a gestionar tu patrimonio en segundos' : 'Inicia sesión para acceder a tu dashboard';
-            document.getElementById('auth-name').style.display = isRegister ? 'block' : 'none';
-            document.getElementById('auth-submit-text').textContent = isRegister ? 'Crear cuenta' : 'Iniciar sesión';
-            document.getElementById('auth-toggle').innerHTML = isRegister
-                ? '¿Ya tienes cuenta? <a onclick="switchAuthMode(\'login\')">Inicia sesión</a>'
-                : '¿No tienes cuenta? <a onclick="switchAuthMode(\'register\')">Crear una gratis</a>';
-            document.getElementById('auth-error').style.display = 'none';
-        }
-
-        function showAuthError(msg) {
-            const el = document.getElementById('auth-error');
-            el.textContent = msg;
-            el.style.display = 'block';
-        }
-
-        function setLoading(loading) {
-            document.getElementById('auth-submit-btn').disabled = loading;
-            document.getElementById('auth-submit-text').style.display = loading ? 'none' : 'inline';
-            document.getElementById('auth-spinner').style.display = loading ? 'inline-block' : 'none';
-        }
-
-        async function handleEmailAuth() {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            const name = document.getElementById('auth-name').value;
-
-            setLoading(true);
-            try {
-                if (authMode === 'register') {
-                    const cred = await auth.createUserWithEmailAndPassword(email, password);
-                    if (name) await cred.user.updateProfile({ displayName: name });
-                } else {
-                    await auth.signInWithEmailAndPassword(email, password);
-                }
-                // Success — redirect to dashboard
-                window.location.href = '/app';
-            } catch (err) {
-                const msgs = {
-                    'auth/email-already-in-use': 'Este email ya tiene una cuenta. ¿Quieres iniciar sesión?',
-                    'auth/invalid-email': 'Email no válido.',
-                    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
-                    'auth/user-not-found': 'No existe una cuenta con este email.',
-                    'auth/wrong-password': 'Contraseña incorrecta.',
-                    'auth/invalid-credential': 'Email o contraseña incorrectos.',
-                    'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
-                };
-                showAuthError(msgs[err.code] || `Error: ${err.message}`);
-            } finally {
-                setLoading(false);
+    function openAuth(mode) {
+        authMode = mode;
+        const overlay = document.getElementById('auth-overlay');
+        overlay.style.display = 'flex';
+        requestAnimationFrame(() => overlay.classList.add('visible'));
+        updateAuthUI();
+    }
+    function closeAuth() {
+        const overlay = document.getElementById('auth-overlay');
+        overlay.classList.remove('visible');
+        setTimeout(() => overlay.style.display = 'none', 300);
+        document.getElementById('auth-error').style.display = 'none';
+    }
+    function switchAuthMode(mode) { authMode = mode; updateAuthUI(); }
+    function updateAuthUI() {
+        const isReg = authMode === 'register';
+        document.getElementById('auth-title').textContent = isReg ? 'Crear tu cuenta' : 'Bienvenido de vuelta';
+        document.getElementById('auth-sub').textContent = isReg ? 'Empieza a gestionar tu patrimonio en segundos' : 'Inicia sesión para acceder a tu dashboard';
+        document.getElementById('auth-name').style.display = isReg ? 'block' : 'none';
+        document.getElementById('auth-submit-text').textContent = isReg ? 'Crear cuenta' : 'Iniciar sesión';
+        document.getElementById('auth-toggle').innerHTML = isReg
+            ? '¿Ya tienes cuenta? <a onclick="switchAuthMode(\'login\')">Inicia sesión</a>'
+            : '¿No tienes cuenta? <a onclick="switchAuthMode(\'register\')">Crear una gratis</a>';
+        document.getElementById('auth-error').style.display = 'none';
+    }
+    function showAuthError(msg) {
+        const el = document.getElementById('auth-error');
+        el.textContent = msg; el.style.display = 'block';
+    }
+    function setLoading(loading) {
+        document.getElementById('auth-submit-btn').disabled = loading;
+        document.getElementById('auth-submit-text').style.display = loading ? 'none' : 'inline';
+        document.getElementById('auth-spinner').style.display = loading ? 'inline-block' : 'none';
+    }
+    async function handleEmailAuth() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const name = document.getElementById('auth-name').value;
+        setLoading(true);
+        try {
+            if (authMode === 'register') {
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                if (name) await cred.user.updateProfile({ displayName: name });
+            } else {
+                await auth.signInWithEmailAndPassword(email, password);
             }
+            window.location.href = '/app';
+        } catch (err) {
+            const msgs = {
+                'auth/email-already-in-use': 'Este email ya tiene una cuenta.',
+                'auth/invalid-email': 'Email no válido.',
+                'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+                'auth/user-not-found': 'No existe una cuenta con este email.',
+                'auth/wrong-password': 'Contraseña incorrecta.',
+                'auth/invalid-credential': 'Email o contraseña incorrectos.',
+                'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+            };
+            showAuthError(msgs[err.code] || `Error: ${err.message}`);
+        } finally { setLoading(false); }
+    }
+    async function signInWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            await auth.signInWithPopup(provider);
+            window.location.href = '/app';
+        } catch (err) {
+            if (err.code !== 'auth/popup-closed-by-user')
+                showAuthError('Error con Google Sign-in. Inténtalo de nuevo.');
         }
+    }
+    auth.onAuthStateChanged(user => {
+        if (user && window.location.pathname === '/') window.location.href = '/app';
+    });
 
-        async function signInWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                await auth.signInWithPopup(provider);
-                window.location.href = '/app';
-            } catch (err) {
-                if (err.code !== 'auth/popup-closed-by-user') {
-                    showAuthError('Error con Google Sign-in. Inténtalo de nuevo.');
-                }
-            }
-        }
+    /* ════════════════════════════════════════
+       NAV SCROLL EFFECT
+    ════════════════════════════════════════ */
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
 
-        // Check if already logged in → redirect to dashboard
-        auth.onAuthStateChanged(user => {
-            if (user && window.location.pathname === '/') {
-                window.location.href = '/app';
+    /* ════════════════════════════════════════
+       HERO PARALLAX (mouse)
+    ════════════════════════════════════════ */
+    const heroSection = document.getElementById('hero');
+    const heroCards = document.getElementById('hero-cards');
+    const meshBlobs = document.querySelectorAll('.mesh-blob');
+
+    document.addEventListener('mousemove', e => {
+        const rect = heroSection.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+        const cx = e.clientX / window.innerWidth - 0.5;
+        const cy = e.clientY / window.innerHeight - 0.5;
+
+        heroCards.style.transform = `translateX(${cx * 18}px) translateY(${cy * 10}px)`;
+        meshBlobs.forEach((b, i) => {
+            const factor = (i + 1) * 0.4;
+            b.style.transform = `translate(${cx * 30 * factor}px, ${cy * 20 * factor}px)`;
+        });
+    });
+
+    /* ════════════════════════════════════════
+       SCROLL REVEAL (IntersectionObserver)
+    ════════════════════════════════════════ */
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                // Animate portfolio bars when visible
+                e.target.querySelectorAll('.pb-fill[data-w]').forEach(bar => {
+                    bar.style.width = bar.dataset.w + '%';
+                });
+                // Animate retirement bar
+                const retBar = e.target.querySelector('#ret-bar');
+                if (retBar) setTimeout(() => retBar.style.width = '26%', 200);
+                revealObserver.unobserve(e.target);
             }
         });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger').forEach(el => {
+        revealObserver.observe(el);
+    });
+
+    /* ════════════════════════════════════════
+       BENTO CARD MOUSE GLOW
+    ════════════════════════════════════════ */
+    document.querySelectorAll('.bento-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            card.style.setProperty('--mouse-x', x + '%');
+            card.style.setProperty('--mouse-y', y + '%');
+        });
+    });
+
+    /* ════════════════════════════════════════
+       HERO CARD TILT
+    ════════════════════════════════════════ */
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 6}deg) translateZ(6px)`;
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateZ(0)';
+        });
+    });
+
+    /* ════════════════════════════════════════
+       COUNTER ANIMATION
+    ════════════════════════════════════════ */
+    const counterObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (!e.isIntersecting) return;
+            e.target.querySelectorAll('.count[data-target]').forEach(el => {
+                const target = parseInt(el.dataset.target);
+                if (isNaN(target) || target === 0) return;
+                let start = 0;
+                const duration = 1600;
+                const startTime = performance.now();
+                function tick(now) {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const ease = 1 - Math.pow(1 - progress, 3);
+                    const val = Math.round(start + (target - start) * ease);
+                    el.textContent = val;
+                    if (progress < 1) requestAnimationFrame(tick);
+                }
+                requestAnimationFrame(tick);
+            });
+            counterObserver.unobserve(e.target);
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stats-grid').forEach(el => counterObserver.observe(el));
+
+    /* ════════════════════════════════════════
+       HERO NUMBER LIVE ANIMATION
+    ════════════════════════════════════════ */
+    const heroValEl = document.getElementById('hero-val');
+    const values = ['€128,430', '€129,812', '€128,950', '€131,204', '€130,577'];
+    let vIdx = 0;
+    setInterval(() => {
+        vIdx = (vIdx + 1) % values.length;
+        heroValEl.style.opacity = '0';
+        heroValEl.style.transform = 'translateY(8px)';
+        heroValEl.style.transition = 'opacity 0.3s, transform 0.3s';
+        setTimeout(() => {
+            heroValEl.textContent = values[vIdx];
+            heroValEl.style.opacity = '1';
+            heroValEl.style.transform = 'translateY(0)';
+        }, 300);
+    }, 3500);
+
     </script>
 </body>
 </html>

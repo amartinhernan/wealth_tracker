@@ -696,17 +696,44 @@ async function fetchCategoriesCache() {
     const r = await tokenFetch('/api/categories'); CATEGORIES_CACHE = await r.json();
 }
 
+function openImportModal() {
+    document.getElementById('modal-import-tx').classList.add('open');
+    document.getElementById('import-result').style.display = 'none';
+    document.getElementById('import-upload-label').textContent = 'Haz clic para seleccionar el archivo CSV / Excel';
+    document.getElementById('import-upload-zone').style.pointerEvents = '';
+}
+function closeImportModal() {
+    document.getElementById('modal-import-tx').classList.remove('open');
+    document.getElementById('import-file').value = '';
+}
+
 async function handleFileUpload(input) {
     if (!input.files || !input.files.length) return;
     const file = input.files[0], source = document.getElementById('import-source').value;
     const formData = new FormData(); formData.append('file', file); formData.append('source', source);
+    const label = document.getElementById('import-upload-label');
+    const zone  = document.getElementById('import-upload-zone');
+    const result = document.getElementById('import-result');
+    label.textContent = 'Procesando...';
+    zone.style.pointerEvents = 'none';
+    result.style.display = 'none';
     try {
-        document.querySelector('[onclick*="import-file"]').textContent = 'Procesando...';
         const r = await tokenFetch('/api/transactions/import', { method: 'POST', body: formData });
         const res = await r.json();
-        if (res.imported !== undefined) { alert(`¡Importados ${res.imported} movimientos.`); fetchTransactions(); }
-    } catch (e) { alert('Error de conexión.'); }
-    finally { document.querySelector('[onclick*="import-file"]').textContent = 'Importar'; input.value = ''; }
+        if (res.imported !== undefined) {
+            result.style.display = 'flex';
+            result.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${res.imported} transacciones importadas`;
+            fetchTransactions();
+            setTimeout(closeImportModal, 1800);
+        }
+    } catch (e) {
+        result.style.display = 'flex';
+        result.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--red)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Error de conexión`;
+    } finally {
+        label.textContent = 'Haz clic para seleccionar el archivo CSV / Excel';
+        zone.style.pointerEvents = '';
+        input.value = '';
+    }
 }
 
 function renderTransactionsTable() {
@@ -2093,6 +2120,10 @@ async function saveAsset() {
         holdings: holdingsVal,
         invested_total: investedVal
     };
+    if (subtype === 'indexa') {
+        const tok = (document.getElementById('indexa-token')?.value || '').trim();
+        if (tok) data.indexa_token = tok;
+    }
     const btn = document.getElementById('btn-save-asset');
     btn.textContent = 'Guardando…'; btn.disabled = true;
     try {

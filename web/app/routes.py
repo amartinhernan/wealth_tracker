@@ -511,6 +511,14 @@ def save_config(uid):
                 if existing_val:
                     data[field] = existing_val
 
+    # Preserve existing Indexa token if the user didn't re-enter it (empty field on edit)
+    if data.get('subtype') == 'indexa' and not data.get('indexa_token'):
+        existing_doc = configs_ref.document(name).get()
+        if existing_doc.exists:
+            stored_token = existing_doc.to_dict().get('indexa_token')
+            if stored_token:
+                data['indexa_token'] = stored_token
+
     data['updated_at'] = datetime.now(timezone.utc)
     configs_ref.document(name).set(data)
     return jsonify({"status": "success", "manual_balance_date": data.get('manual_balance_date', today_str)})

@@ -1820,6 +1820,12 @@
             background: var(--bg)
         }
 
+        /* Import modal: allow bank picker dropdown to overflow the card */
+        #modal-import-tx .modal-card { overflow: visible; }
+        #modal-import-tx .modal-header,
+        #modal-import-tx .modal-body { overflow: visible; background: var(--bg); }
+        #modal-import-tx .modal-header { border-radius: 20px 20px 0 0; border-bottom: 1px solid var(--border-md); padding: 22px 24px; }
+
         .tab-nav {
             display: flex;
             gap: 0;

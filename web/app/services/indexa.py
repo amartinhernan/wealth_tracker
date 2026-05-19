@@ -1,25 +1,17 @@
 import requests
-import os
 from datetime import datetime
-from dotenv import load_dotenv
 
-# Find .env in the parent directory of 'app'
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-env_path = os.path.join(base_dir, '.env')
-load_dotenv(env_path)
-
-INDEXA_TOKEN = os.getenv('INDEXA_TOKEN')
-HEADERS = {'X-AUTH-TOKEN': INDEXA_TOKEN}
 BASE_URL = 'https://api.indexacapital.com'
 
-def fetch_indexa_data():
+def fetch_indexa_data(token: str = None):
     """
     Obtiene los datos agregados y detallados de Indexa Capital.
-    Busca tanto en cuentas de fondos como en planes de pensiones/seguros.
+    Requiere el token personal del usuario almacenado en Firestore.
+    Sin token no se hace ninguna llamada a la API.
     """
-    if not INDEXA_TOKEN:
-        print("DEBUG: Indexa token is missing in environment")
-        return {"status": "error", "message": "Token no configurado en .env"}
+    if not token:
+        return {"status": "error", "message": "Token no configurado"}
+    HEADERS = {'X-AUTH-TOKEN': token}
 
     try:
         print(f"DEBUG: Fetching Indexa user data...")

@@ -4,30 +4,15 @@
                         <h1 class="page-title">Transacciones</h1>
                         <p class="page-sub">Importa, agrupa y categoriza tus movimientos bancarios</p>
                     </div>
-                    <div style="display:flex;gap:10px;align-items:center">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <button class="btn-action" onclick="openCategoryModal()">Gestionar Categorías</button>
-
-                        <!-- Custom bank picker -->
-                        <div class="bank-picker" id="bank-picker">
-                            <button class="bank-picker-btn" id="bank-picker-btn" type="button" onclick="toggleBankPicker(event)">
-                                <span id="bank-picker-logo" style="line-height:0;flex-shrink:0;"></span>
-                                <span id="bank-picker-label" style="flex:1;text-align:left;white-space:nowrap;"></span>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.5;"><polyline points="6 9 12 15 18 9"/></svg>
-                            </button>
-                            <div class="bank-picker-menu" id="bank-picker-menu"></div>
-                        </div>
-                        <input type="hidden" id="import-source" value="SANTANDER">
-
-                        <input type="file" id="import-file" style="display:none" onchange="handleFileUpload(this)">
                         <button class="btn-action" onclick="openManualTxModal()" style="display:flex;align-items:center;gap:5px;">
                             <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Añadir
+                            Añadir manualmente
                         </button>
-                        <button class="btn-action btn-primary" onclick="document.getElementById('import-file').click()">
-                            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                            </svg>
-                            Importar
+                        <button class="btn-action btn-primary" onclick="openImportModal()" style="display:flex;align-items:center;gap:5px;">
+                            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                            Importar transacciones
                         </button>
                     </div>
                 </div>
@@ -122,6 +107,42 @@
                     </div>
                 </div>
             </div><!-- end page-transactions -->
+
+<!-- ══ MODAL: IMPORTAR TRANSACCIONES ══ -->
+<div class="modal-ov" id="modal-import-tx">
+    <div class="modal-card" style="max-width:500px;">
+        <div class="modal-header">
+            <h2 style="font-size:16px;font-weight:700;">Importar transacciones</h2>
+            <button class="btn-action" onclick="closeImportModal()" style="width:32px;height:32px;justify-content:center;font-size:18px;flex-shrink:0;">×</button>
+        </div>
+        <div class="modal-body" style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+            <p style="font-size:13px;color:var(--text-2);margin:0;">Selecciona tu banco, descarga el extracto y súbelo. Detectamos el formato automáticamente.</p>
+
+            <!-- Bank picker -->
+            <div class="bank-picker" id="bank-picker">
+                <button class="bank-picker-btn" id="bank-picker-btn" type="button" onclick="toggleBankPicker(event)">
+                    <span id="bank-picker-logo" style="line-height:0;flex-shrink:0;"></span>
+                    <span id="bank-picker-label" style="flex:1;text-align:left;white-space:nowrap;"></span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.5;"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="bank-picker-menu" id="bank-picker-menu"></div>
+            </div>
+            <input type="hidden" id="import-source" value="SANTANDER">
+            <input type="file" id="import-file" style="display:none" accept=".csv,.xls,.xlsx" onchange="handleFileUpload(this)">
+
+            <!-- Upload zone -->
+            <div id="import-upload-zone" onclick="document.getElementById('import-file').click()"
+                style="border:2px dashed var(--border);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color .15s;display:flex;flex-direction:column;align-items:center;gap:10px;"
+                onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.35"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <span id="import-upload-label" style="font-size:13px;color:var(--text-3);">Haz clic para seleccionar el archivo CSV / Excel</span>
+            </div>
+
+            <!-- Result feedback -->
+            <div id="import-result" style="display:none;align-items:center;gap:8px;font-size:13px;font-weight:600;"></div>
+        </div>
+    </div>
+</div>
 
 <!-- ══ MODAL: AÑADIR TRANSACCIÓN MANUAL ══ -->
 <div class="modal-ov" id="modal-manual-tx">

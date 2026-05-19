@@ -157,7 +157,7 @@ def sync_managed_assets(uid):
         elif subtype == 'indexa':
             if c.get('type') == 'auto':
                 if idx_res_cache is None:
-                    idx_res_cache = fetch_indexa_data()
+                    idx_res_cache = fetch_indexa_data(token=c.get('indexa_token'))
                 
                 if idx_res_cache.get('status') == 'success':
                     d = idx_res_cache.get('data', {})
